@@ -15,9 +15,9 @@ orientation = portrait
 
 fullscreen = 0
 
-android.api = 21
-android.minapi = 21
-android.ndk = 25c
+android.api = 35
+android.minapi = 35
+android.ndk = 25b
 
 android.permissions = INTERNET,FOREGROUND_SERVICE,FOREGROUND_SERVICE_MEDIA_PROJECTION
 
