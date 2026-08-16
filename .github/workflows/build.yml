@@ -26,10 +26,16 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential libffi-dev libssl-dev ccache git unzip zip zlib1g-dev openjdk-17-jdk python3-pip autoconf libtool pkg-config libncurses5-dev libncursesw5-dev libtinfo5 cmake
-        pip install --upgrade pip
-        pip install buildozer cython==0.29.33
+        sudo apt-get install -y build-essential libffi-dev libssl-dev ccache git unzip zip zlib1g-dev openjdk-17-jdk python3-pip autoconf libtool pkg-config cmake
+        pip install --upgrade pip setuptools
+        pip install buildozer cython
 
     - name: Build with Buildozer
       run: |
         buildozer -v android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-release
+        path: bin/*.apk
