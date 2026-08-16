@@ -21,7 +21,7 @@ android.ndk = 25b
 
 android.permissions = INTERNET,FOREGROUND_SERVICE,FOREGROUND_SERVICE_MEDIA_PROJECTION
 
-android.archs = arm64-v8a,armeabi-v7a
+android.archs = arm64-v8a
 
 android.accept_sdk_license = True
 
