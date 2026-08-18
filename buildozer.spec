@@ -1,5 +1,5 @@
 [app]
-android.python_version = 3.10
+
 title = Screen Recorder
 package.name = screenrecorder
 package.domain = org.example
