@@ -37,6 +37,7 @@ jobs:
       env:
         ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/25.2.9519653
         ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk/25.2.9519653
+        PIP_NO_BUILD_ISOLATION: 1
       run: |
         buildozer -v android debug
 
