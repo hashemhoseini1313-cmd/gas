@@ -9,7 +9,7 @@ source.include_exts = py,java,png,jpg,kv
 
 version = 1.0
 
-requirements = python3,kivy==2.2.1,arabic_reshaper,pyjnius
+requirements = python3,kivy==2.2.1,arabic_reshaper
 
 orientation = portrait
 
