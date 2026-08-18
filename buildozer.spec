@@ -1,6 +1,6 @@
 [app]
 
-title = ??? ????
+title = Screen Recorder
 package.name = screenrecorder
 package.domain = org.example
 
@@ -9,13 +9,13 @@ source.include_exts = py,java,png,jpg,kv
 
 version = 1.0
 
-requirements = python3, kivy==2.2.1, cython==0.29.36
+requirements = python3,kivy==2.2.1,arabic_reshaper,pyjnius
 
 orientation = portrait
 
 fullscreen = 0
 max_cores = 1
-android.api = 33
+android.api = 34
 android.minapi = 21
 android.ndk = 25b
 
