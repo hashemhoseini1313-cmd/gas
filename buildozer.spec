@@ -1,30 +1,42 @@
-name: Build Android APK
+[app]
+# نسخهی پایتون برای اندروید (مهم)
+android.python_version = 3.10
 
-on:
-  push:
-    branches: [ main ]
+# مشخصات برنامه
+title = Screen Recorder
+package.name = screenrecorder
+package.domain = org.example
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+source.dir = .
+source.include_exts = py,java,png,jpg,kv,ttf
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+version = 1.0
 
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
+# نیازمندیها
+# (pyjnius خودکار همراه Kivy هست؛ اگر خطا گرفتی میتونی اضافه کنی)
+requirements = python3,kivy==2.2.1,arabic_reshaper
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y build-essential libffi-dev libssl-dev ccache git unzip zip zlib1g-dev openjdk-17-jdk libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
-          pip install --upgrade pip setuptools
-          pip install Cython==0.29.36
-          pip install buildozer==1.5.0
+# جهت و حالت نمایش
+orientation = portrait
+fullscreen = 0
 
-      - name: Build with Buildozer
-        run: |
-          buildozer -v android debug
+# تنظیمات اندروید 15 (API 34 یا 35)
+android.api = 34
+android.minapi = 21
+android.ndk = 25b
+android.archs = arm64-v8a
+
+# مجوزهای لازم برای ضبط صفحه، عکس و ذخیرهسازی
+android.permissions = INTERNET,FOREGROUND_SERVICE,FOREGROUND_SERVICE_MEDIA_PROJECTION,RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+
+# اضافه کردن فایلهای Java و Manifest سفارشی
+android.add_src = src
+android.add_manifest = manifest.xml
+android.services = ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
+
+# پذیرش لایسنس SDK
+android.accept_sdk_license = True
+
+[buildozer]
+log_level = 2
+warn_on_root = 1
