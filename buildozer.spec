@@ -1,31 +1,30 @@
-[app]
+name: Build Android APK
 
-title = Screen Recorder
-package.name = screenrecorder
-package.domain = org.example
+on:
+  push:
+    branches: [ main ]
 
-source.dir = .
-source.include_exts = py,java,png,jpg,kv
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-version = 1.0
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-requirements = python3,kivy==2.2.1,arabic_reshaper
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-orientation = portrait
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential libffi-dev libssl-dev ccache git unzip zip zlib1g-dev openjdk-17-jdk libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+          pip install --upgrade pip setuptools
+          pip install Cython==0.29.36
+          pip install buildozer==1.5.0
 
-fullscreen = 0
-max_cores = 1
-android.api = 34
-android.minapi = 21
-android.ndk = 25b
-
-android.permissions = INTERNET,FOREGROUND_SERVICE,FOREGROUND_SERVICE_MEDIA_PROJECTION
-
-android.archs = arm64-v8a
-
-android.accept_sdk_license = True
-
-[buildozer]
-
-log_level = 2
-warn_on_root = 1
+      - name: Build with Buildozer
+        run: |
+          buildozer -v android debug
