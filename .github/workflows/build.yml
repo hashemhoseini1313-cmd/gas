@@ -45,7 +45,7 @@ jobs:
           "cython==0.29.33" \
           "buildozer==1.5.0"
 
-    # 👇 مرحلهٔ جدید: نصب Android SDK و پذیرش لایسنس‌ها
+    # 👇 مرحلهٔ نصب Android SDK و پذیرش لایسنس‌ها
     - name: Install Android SDK and accept licenses
       run: |
         mkdir -p $HOME/android-sdk/cmdline-tools
@@ -61,16 +61,22 @@ jobs:
         yes | sdkmanager --licenses > /dev/null 2>&1 || true
         sdkmanager "platform-tools" "platforms;android-34" "build-tools;33.0.2" "build-tools;34.0.0"
 
-    # 👇 مرحلهٔ پاک‌سازی کش (مانند قبل)
+    # 👇 مرحلهٔ پاک‌سازی کش
     - name: Clean build cache
       run: |
         rm -rf .buildozer ~/.buildozer
 
+    # 👇 مرحلهٔ جدید: ساخت Symlink برای فریب Buildozer
+    - name: Create SDK symlink for Buildozer
+      run: |
+        mkdir -p /home/runner/.buildozer/android/platform
+        ln -sfn /home/runner/android-sdk /home/runner/.buildozer/android/platform/android-sdk
+
     - name: Build with Buildozer
       env:
-        ANDROID_HOME: /home/runner/android-sdk          # ✅ اضافه شد
-        ANDROID_SDK_ROOT: /home/runner/android-sdk       # ✅ اضافه شد
-        ANDROIDSDK: /home/runner/android-sdk             # ✅ اضافه شد
+        ANDROID_HOME: /home/runner/android-sdk
+        ANDROID_SDK_ROOT: /home/runner/android-sdk
+        ANDROIDSDK: /home/runner/android-sdk
         ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/25.2.9519653
         ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk/25.2.9519653
         PIP_NO_BUILD_ISOLATION: 1
