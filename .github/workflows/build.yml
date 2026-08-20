@@ -45,7 +45,7 @@ jobs:
           "cython==0.29.33" \
           "buildozer==1.5.0"
 
-    # 👇 مرحلهٔ نصب Android SDK و پذیرش لایسنس‌ها
+    # 👇 مرحلهٔ نصب Android SDK و پذیرش لایسنس‌ها با لینک sdkmanager
     - name: Install Android SDK and accept licenses
       run: |
         mkdir -p $HOME/android-sdk/cmdline-tools
@@ -61,12 +61,17 @@ jobs:
         yes | sdkmanager --licenses > /dev/null 2>&1 || true
         sdkmanager "platform-tools" "platforms;android-34" "build-tools;33.0.2" "build-tools;34.0.0"
 
+        # لینک برای ساختار قدیمی SDK که Buildozer انتظار دارد
+        mkdir -p $HOME/android-sdk/tools/bin
+        ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/android-sdk/tools/bin/sdkmanager
+        ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager $HOME/android-sdk/tools/bin/avdmanager
+
     # 👇 مرحلهٔ پاک‌سازی کش
     - name: Clean build cache
       run: |
         rm -rf .buildozer ~/.buildozer
 
-    # 👇 مرحلهٔ جدید: ساخت Symlink برای فریب Buildozer
+    # 👇 ساخت Symlink برای مسیر پیش‌فرض Buildozer
     - name: Create SDK symlink for Buildozer
       run: |
         mkdir -p /home/runner/.buildozer/android/platform
