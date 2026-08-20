@@ -43,10 +43,25 @@ jobs:
         python -m pip install --upgrade pip setuptools
         pip install --no-build-isolation \
           "cython==0.29.33" \
-          "buildozer==1.5.0" \
-          
+          "buildozer==1.5.0"
 
-    # 👇 مرحلهٔ پاک‌سازی کش اضافه شد
+    # 👇 مرحلهٔ جدید: نصب Android SDK و پذیرش لایسنس‌ها
+    - name: Install Android SDK and accept licenses
+      run: |
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk/cmdline-tools
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip -q commandlinetools-linux-11076708_latest.zip
+        mv cmdline-tools latest
+        rm commandlinetools-linux-11076708_latest.zip
+
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+
+        yes | sdkmanager --licenses > /dev/null 2>&1 || true
+        sdkmanager "platform-tools" "platforms;android-34" "build-tools;33.0.2" "build-tools;34.0.0"
+
+    # 👇 مرحلهٔ پاک‌سازی کش (مانند قبل)
     - name: Clean build cache
       run: |
         rm -rf .buildozer ~/.buildozer
