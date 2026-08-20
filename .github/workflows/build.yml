@@ -68,6 +68,9 @@ jobs:
 
     - name: Build with Buildozer
       env:
+        ANDROID_HOME: /home/runner/android-sdk          # ✅ اضافه شد
+        ANDROID_SDK_ROOT: /home/runner/android-sdk       # ✅ اضافه شد
+        ANDROIDSDK: /home/runner/android-sdk             # ✅ اضافه شد
         ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/25.2.9519653
         ANDROID_NDK_ROOT: /usr/local/lib/android/sdk/ndk/25.2.9519653
         PIP_NO_BUILD_ISOLATION: 1
