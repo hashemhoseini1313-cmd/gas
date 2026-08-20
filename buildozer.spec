@@ -22,7 +22,17 @@ warn_on_root = 1
 [android]
 # مهم: bootstrap باید sdl2 باشه
 bootstrap = sdl2
+
+# مسیرهای SDK و NDK از پیش نصب‌شده در رانر گیت‌هاب
+android.sdk_path = /home/runner/android-sdk
+android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
+
+# جلوگیری از به‌روزرسانی خودکار SDK توسط Buildozer
+android.skip_update = True
+
+# نسخه‌ی build-tools که با لایسنس پذیرفته‌شده نصب می‌شود
 android.build_tools_version = 33.0.2
+
 # API و NDK
 android.api = 34
 android.minapi = 21
