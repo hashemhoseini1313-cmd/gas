@@ -23,6 +23,15 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
+    - name: Install SDL2 system libraries
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixer-dev \
+          libsdl2-ttf-dev
+
     - name: Install dependencies
       run: |
         sudo apt update -o Acquire::Retries=3
