@@ -22,7 +22,7 @@ warn_on_root = 1
 [android]
 # مهم: bootstrap باید sdl2 باشه
 bootstrap = sdl2
-android.build_tools_version = 34.0.0
+android.build_tools_version = 33.0.2
 # API و NDK
 android.api = 34
 android.minapi = 21
