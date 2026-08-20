@@ -71,11 +71,17 @@ jobs:
       run: |
         rm -rf .buildozer ~/.buildozer
 
-    # 👇 ساخت Symlink برای مسیر پیش‌فرض Buildozer
+    # 👇 ساخت Symlink برای مسیر پیش‌فرض Buildozer (SDK)
     - name: Create SDK symlink for Buildozer
       run: |
         mkdir -p /home/runner/.buildozer/android/platform
         ln -sfn /home/runner/android-sdk /home/runner/.buildozer/android/platform/android-sdk
+
+    # 👇 ساخت Symlink برای NDK (جلوگیری از دانلود مجدد NDK)
+    - name: Create NDK symlink for Buildozer
+      run: |
+        mkdir -p /home/runner/.buildozer/android/platform
+        ln -sfn /usr/local/lib/android/sdk/ndk/25.2.9519653 /home/runner/.buildozer/android/platform/android-ndk-r25b
 
     - name: Build with Buildozer
       env:
