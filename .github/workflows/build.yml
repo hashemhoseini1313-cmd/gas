@@ -44,7 +44,7 @@ jobs:
         pip install --no-build-isolation \
           "cython==0.29.33" \
           "buildozer==1.5.0" \
-          "python-for-android==2024.1.21"
+          
 
     # 👇 مرحلهٔ پاک‌سازی کش اضافه شد
     - name: Clean build cache
