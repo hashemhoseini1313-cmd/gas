@@ -1,5 +1,5 @@
 [app]
-
+p4a.branch = 2024.1.21
 # مشخصات برنامه
 title = Screen Recorder
 package.name = screenrecorder
