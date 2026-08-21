@@ -9,7 +9,7 @@ source.include_exts = py,java,png,jpg,kv,ttf,otf
 version = 1.0
 
 # نیازمندی‌ها (بدون hostpython3)
-requirements = python3==3.10.12,kivy,arabic_reshaper,python-bidi
+requirements = python3==3.10.12,hostpython3==3.10.12,kivy,arabic_reshaper,python-bidi
 
 orientation = portrait
 fullscreen = 0
