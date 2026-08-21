@@ -25,6 +25,9 @@ bootstrap = sdl2
 # مسیر SDK (در گیت‌هاب رانر)
 android.sdk_path = /home/runner/android-sdk
 
+# مسیر NDK 25b که مستقیماً دانلود شده است (مهم!)
+android.ndk_path = /home/runner/android-ndk-r25b
+
 # جلوگیری از به‌روزرسانی خودکار SDK توسط Buildozer
 android.skip_update = True
 
