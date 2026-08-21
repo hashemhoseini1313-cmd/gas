@@ -8,8 +8,8 @@ source.include_exts = py,java,png,jpg,kv,ttf,otf
 
 version = 1.0
 
-# نیازمندی‌ها (نسخهٔ یکسان پایتون)
-requirements = python3==3.10.12,hostpython3==3.10.12,kivy,arabic_reshaper,python-bidi
+# نیازمندی‌ها (بدون hostpython3)
+requirements = python3==3.10.12,kivy,arabic_reshaper,python-bidi
 
 orientation = portrait
 fullscreen = 0
@@ -18,20 +18,17 @@ fullscreen = 0
 log_level = 2
 warn_on_root = 1
 p4a.ndk_version = 25b
-# p4a.branch = v2024.01.21   # اگه لازم شد؛ ولی چون p4a با pip نصب می‌کنی، بهتره بذاری حذف بمونه
 
 [android]
-# مهم: bootstrap باید sdl2 باشه
 bootstrap = sdl2
 
-# مسیرهای SDK و NDK از پیش نصب‌شده در رانر گیت‌هاب
+# مسیر SDK (در گیت‌هاب رانر)
 android.sdk_path = /home/runner/android-sdk
-android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
 
 # جلوگیری از به‌روزرسانی خودکار SDK توسط Buildozer
 android.skip_update = True
 
-# نسخه‌ی build-tools که با لایسنس پذیرفته‌شده نصب می‌شود
+# نسخه build-tools برای اندروید ۱۵
 android.build_tools_version = 35.0.0
 
 # API و NDK
@@ -46,6 +43,7 @@ android.permissions = INTERNET,FOREGROUND_SERVICE,FOREGROUND_SERVICE_MEDIA_PROJE
 # فایل‌های Java و Manifest سفارشی
 android.add_src = src
 android.manifest_path = manifest.xml
-android.services = ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
+
+# android.services = ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
 
 android.accept_sdk_license = True
