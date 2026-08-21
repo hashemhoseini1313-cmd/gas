@@ -40,6 +40,11 @@ jobs:
         pip install Cython==0.29.36
         pip install buildozer==1.5.0
 
+    # 👇 مرحله‌ی جدید: کاهش نسخه pip برای سازگاری با p4a
+    - name: Downgrade pip for compatibility
+      run: |
+        python3 -m pip install "pip<24.1"
+
     # نصب Android SDK و پذیرش لایسنس‌ها
     - name: Install Android SDK and accept licenses
       run: |
@@ -60,29 +65,23 @@ jobs:
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/android-sdk/tools/bin/sdkmanager
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager $HOME/android-sdk/tools/bin/avdmanager
 
-    # پاک‌سازی کامل کش (اول)
+    # پاک‌سازی کامل کش
     - name: Clean build cache
       run: |
         rm -rf .buildozer ~/.buildozer
 
     # دانلود NDK r25b و قرار دادن در مسیر پیش‌فرض Buildozer
-    - name: Download and install NDK r25b for Buildozer
+    - name: Download and install NDK r25b
       run: |
         wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
         unzip -q android-ndk-r25b-linux.zip
         rm android-ndk-r25b-linux.zip
         mkdir -p /home/runner/.buildozer/android/platform
         mv android-ndk-r25b /home/runner/.buildozer/android/platform/android-ndk-r25b
-        ls -la /home/runner/.buildozer/android/platform/
+        # ساخت symlink برای نام r28c که Buildozer انتظار دارد
+        ln -sfn /home/runner/.buildozer/android/platform/android-ndk-r25b /home/runner/.buildozer/android/platform/android-ndk-r28c
 
-    # ساخت symlink برای فریب Buildozer: مسیر r28c را به r25b متصل می‌کنیم
-    - name: Create trick symlink for NDK 28c -> 25b
-      run: |
-        cd /home/runner/.buildozer/android/platform
-        ln -sfn android-ndk-r25b android-ndk-r28c
-        ls -la
-
-    # ساخت symlink برای SDK (اختیاری ولی مفید)
+    # ساخت symlink برای SDK
     - name: Create SDK symlink for Buildozer
       run: |
         mkdir -p /home/runner/.buildozer/android/platform
