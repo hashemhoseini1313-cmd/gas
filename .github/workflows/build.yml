@@ -53,32 +53,37 @@ jobs:
         export ANDROID_HOME=$HOME/android-sdk
         export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
 
-        # پذیرش همه لایسنس‌ها
         yes | sdkmanager --licenses > /dev/null 2>&1 || true
-
-        # نصب platform-tools و build-tools نسخه ۳۵
         sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-        # لینک برای ساختار قدیمی SDK
         mkdir -p $HOME/android-sdk/tools/bin
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/android-sdk/tools/bin/sdkmanager
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager $HOME/android-sdk/tools/bin/avdmanager
 
-    # دانلود مستقیم NDK r25b (برای جلوگیری از استفاده از NDK ناسازگار)
+    # دانلود مستقیم NDK r25b
     - name: Download and extract NDK r25b
       run: |
         wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
         unzip -q android-ndk-r25b-linux.zip -d $HOME
-        mv $HOME/android-ndk-r25b $HOME/android-ndk-r25b-tmp
-        mv $HOME/android-ndk-r25b-tmp $HOME/android-ndk-r25b
+        # حذف دستورات اضافی mv (نیازی نیست)
         rm android-ndk-r25b-linux.zip
+        # بررسی وجود پوشه
+        ls -la $HOME/android-ndk-r25b
 
     # پاک‌سازی کش (قبل از build)
     - name: Clean build cache
       run: |
         rm -rf .buildozer ~/.buildozer
 
-    # ساخت symlink برای مسیر پیش‌فرض Buildozer (بعد از پاک‌سازی)
+    # ساخت symlink برای NDK در مسیر پیش‌فرض Buildozer (اختیاری ولی مفید)
+    - name: Create NDK symlink for Buildozer
+      run: |
+        mkdir -p /home/runner/.buildozer/android/platform
+        ln -sfn /home/runner/android-ndk-r25b /home/runner/.buildozer/android/platform/android-ndk-r25b
+        # حذف NDK اشتباه در صورت وجود
+        rm -rf /home/runner/.buildozer/android/platform/android-ndk-r28c
+
+    # ساخت symlink برای SDK (بعد از پاک‌سازی)
     - name: Create SDK symlink for Buildozer
       run: |
         mkdir -p /home/runner/.buildozer/android/platform
