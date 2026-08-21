@@ -60,30 +60,29 @@ jobs:
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/android-sdk/tools/bin/sdkmanager
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager $HOME/android-sdk/tools/bin/avdmanager
 
-    # دانلود مستقیم NDK r25b
-    - name: Download and extract NDK r25b
-      run: |
-        wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
-        unzip -q android-ndk-r25b-linux.zip -d $HOME
-        # حذف دستورات اضافی mv (نیازی نیست)
-        rm android-ndk-r25b-linux.zip
-        # بررسی وجود پوشه
-        ls -la $HOME/android-ndk-r25b
-
-    # پاک‌سازی کش (قبل از build)
+    # پاک‌سازی کامل کش (اول)
     - name: Clean build cache
       run: |
         rm -rf .buildozer ~/.buildozer
 
-    # ساخت symlink برای NDK در مسیر پیش‌فرض Buildozer (اختیاری ولی مفید)
-    - name: Create NDK symlink for Buildozer
+    # دانلود NDK r25b و قرار دادن در مسیر پیش‌فرض Buildozer
+    - name: Download and install NDK r25b for Buildozer
       run: |
+        wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+        unzip -q android-ndk-r25b-linux.zip
+        rm android-ndk-r25b-linux.zip
         mkdir -p /home/runner/.buildozer/android/platform
-        ln -sfn /home/runner/android-ndk-r25b /home/runner/.buildozer/android/platform/android-ndk-r25b
-        # حذف NDK اشتباه در صورت وجود
-        rm -rf /home/runner/.buildozer/android/platform/android-ndk-r28c
+        mv android-ndk-r25b /home/runner/.buildozer/android/platform/android-ndk-r25b
+        ls -la /home/runner/.buildozer/android/platform/
 
-    # ساخت symlink برای SDK (بعد از پاک‌سازی)
+    # ساخت symlink برای فریب Buildozer: مسیر r28c را به r25b متصل می‌کنیم
+    - name: Create trick symlink for NDK 28c -> 25b
+      run: |
+        cd /home/runner/.buildozer/android/platform
+        ln -sfn android-ndk-r25b android-ndk-r28c
+        ls -la
+
+    # ساخت symlink برای SDK (اختیاری ولی مفید)
     - name: Create SDK symlink for Buildozer
       run: |
         mkdir -p /home/runner/.buildozer/android/platform
@@ -94,8 +93,8 @@ jobs:
         ANDROID_HOME: /home/runner/android-sdk
         ANDROID_SDK_ROOT: /home/runner/android-sdk
         ANDROIDSDK: /home/runner/android-sdk
-        ANDROID_NDK_HOME: /home/runner/android-ndk-r25b
-        ANDROID_NDK_ROOT: /home/runner/android-ndk-r25b
+        ANDROID_NDK_HOME: /home/runner/.buildozer/android/platform/android-ndk-r25b
+        ANDROID_NDK_ROOT: /home/runner/.buildozer/android/platform/android-ndk-r25b
       run: |
         buildozer -v android debug
 
