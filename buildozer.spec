@@ -21,7 +21,7 @@ p4a.ndk_version = 25b
 
 [android]
 bootstrap = sdl2
-
+android.ndk_api = 35
 # مسیر SDK
 android.sdk_path = /home/runner/android-sdk
 
