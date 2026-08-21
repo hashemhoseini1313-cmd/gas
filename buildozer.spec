@@ -17,7 +17,7 @@ fullscreen = 0
 [buildozer]
 log_level = 2
 warn_on_root = 1
-# p4a.ndk_version = 25b
+p4a.ndk_version = 25b
 
 [android]
 bootstrap = sdl2
@@ -25,7 +25,7 @@ bootstrap = sdl2
 # مسیر SDK (در گیت‌هاب رانر)
 android.sdk_path = /home/runner/android-sdk
 
-# مسیر NDK 25b که مستقیماً دانلود شده است (مهم!)
+# مسیر NDK 25b که مستقیماً دانلود می‌کنیم (مهم!)
 android.ndk_path = /home/runner/android-ndk-r25b
 
 # جلوگیری از به‌روزرسانی خودکار SDK توسط Buildozer
@@ -37,7 +37,7 @@ android.build_tools_version = 35.0.0
 # API و NDK
 android.api = 35
 android.minapi = 21
-# android.ndk = 25b
+android.ndk = 25b
 android.arch = arm64-v8a
 
 # مجوزها
