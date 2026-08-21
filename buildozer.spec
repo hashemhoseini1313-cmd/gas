@@ -17,6 +17,7 @@ fullscreen = 0
 [buildozer]
 log_level = 2
 warn_on_root = 1
+p4a.ndk_version = 25b
 # p4a.branch = v2024.01.21   # اگه لازم شد؛ ولی چون p4a با pip نصب می‌کنی، بهتره بذاری حذف بمونه
 
 [android]
