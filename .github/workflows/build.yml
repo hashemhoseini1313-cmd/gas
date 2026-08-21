@@ -38,12 +38,8 @@ jobs:
         sudo apt install -y --no-install-recommends build-essential libffi-dev libssl-dev ccache git unzip zip zlib1g-dev openjdk-17-jdk
         pip install --upgrade pip setuptools
         pip install Cython==0.29.36
-        pip install buildozer==1.5.0
-
-    # 👇 مرحله‌ی جدید: کاهش نسخه pip برای سازگاری با p4a
-    - name: Downgrade pip for compatibility
-      run: |
-        python3 -m pip install "pip<24.1"
+        # نصب آخرین Buildozer از GitHub (پشتیبانی بهتر از Python 3.11)
+        pip install git+https://github.com/kivy/buildozer.git@master
 
     # نصب Android SDK و پذیرش لایسنس‌ها
     - name: Install Android SDK and accept licenses
