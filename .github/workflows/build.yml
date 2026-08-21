@@ -64,7 +64,16 @@ jobs:
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/android-sdk/tools/bin/sdkmanager
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager $HOME/android-sdk/tools/bin/avdmanager
 
-    # پاک‌سازی کش (اول انجام شود)
+    # دانلود مستقیم NDK r25b (برای جلوگیری از استفاده از NDK ناسازگار)
+    - name: Download and extract NDK r25b
+      run: |
+        wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+        unzip -q android-ndk-r25b-linux.zip -d $HOME
+        mv $HOME/android-ndk-r25b $HOME/android-ndk-r25b-tmp
+        mv $HOME/android-ndk-r25b-tmp $HOME/android-ndk-r25b
+        rm android-ndk-r25b-linux.zip
+
+    # پاک‌سازی کش (قبل از build)
     - name: Clean build cache
       run: |
         rm -rf .buildozer ~/.buildozer
@@ -80,6 +89,8 @@ jobs:
         ANDROID_HOME: /home/runner/android-sdk
         ANDROID_SDK_ROOT: /home/runner/android-sdk
         ANDROIDSDK: /home/runner/android-sdk
+        ANDROID_NDK_HOME: /home/runner/android-ndk-r25b
+        ANDROID_NDK_ROOT: /home/runner/android-ndk-r25b
       run: |
         buildozer -v android debug
 
