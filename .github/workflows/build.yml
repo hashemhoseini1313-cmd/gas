@@ -71,6 +71,12 @@ jobs:
       run: |
         rm -rf .buildozer ~/.buildozer
 
+    # 👇 حذف NDK اشتباه (28c) در صورت وجود
+    - name: Remove wrong NDK version
+      run: |
+        rm -rf /home/runner/.buildozer/android/platform/android-ndk-r28c
+        rm -rf /home/runner/.buildozer/android/platform/android-ndk-r28c-linux.zip
+
     # 👇 ساخت Symlink برای مسیر پیش‌فرض Buildozer (SDK)
     - name: Create SDK symlink for Buildozer
       run: |
