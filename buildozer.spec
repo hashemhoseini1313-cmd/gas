@@ -18,7 +18,7 @@ fullscreen = 0
 log_level = 2
 warn_on_root = 1
 p4a.ndk_version = 25b
-
+p4a.branch = develop
 [android]
 bootstrap = sdl2
 android.ndk_api = 35
