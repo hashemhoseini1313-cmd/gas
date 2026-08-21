@@ -8,8 +8,8 @@ source.include_exts = py,java,png,jpg,kv,ttf,otf
 
 version = 1.0
 
-# نیازمندی‌ها (نسخهٔ یکسان python3 و hostpython3)
-requirements = python3==3.10.12,hostpython3==3.10.12,kivy,arabic_reshaper,python-bidi
+# نیازمندی‌ها (پایتون ۳.۱۱ برای حل مشکل توابع حذف‌شده در NDK)
+requirements = python3==3.11.2,hostpython3==3.11.2,kivy,arabic_reshaper,python-bidi
 
 orientation = portrait
 fullscreen = 0
