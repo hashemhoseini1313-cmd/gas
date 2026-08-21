@@ -53,7 +53,7 @@ jobs:
         export ANDROID_HOME=$HOME/android-sdk
         export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
 
-        # پذیرش همه لایسنس‌ها (باید موفق باشد)
+        # پذیرش همه لایسنس‌ها
         yes | sdkmanager --licenses > /dev/null 2>&1 || true
 
         # نصب platform-tools و build-tools نسخه ۳۵
@@ -64,16 +64,16 @@ jobs:
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/android-sdk/tools/bin/sdkmanager
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager $HOME/android-sdk/tools/bin/avdmanager
 
-    # ایجاد symlink برای مسیر پیش‌فرض Buildozer (مهم!)
+    # پاک‌سازی کش (اول انجام شود)
+    - name: Clean build cache
+      run: |
+        rm -rf .buildozer ~/.buildozer
+
+    # ساخت symlink برای مسیر پیش‌فرض Buildozer (بعد از پاک‌سازی)
     - name: Create SDK symlink for Buildozer
       run: |
         mkdir -p /home/runner/.buildozer/android/platform
         ln -sfn /home/runner/android-sdk /home/runner/.buildozer/android/platform/android-sdk
-
-    # پاک‌سازی کش
-    - name: Clean build cache
-      run: |
-        rm -rf .buildozer ~/.buildozer
 
     - name: Build with Buildozer
       env:
