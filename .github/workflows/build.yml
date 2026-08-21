@@ -36,8 +36,13 @@ jobs:
       run: |
         sudo apt update -o Acquire::Retries=3
         sudo apt install -y --no-install-recommends build-essential libffi-dev libssl-dev ccache git unzip zip zlib1g-dev openjdk-17-jdk
-        pip install --upgrade pip setuptools
+
+        # نصب pip نسخه 23.1.2 (سازگار با python-for-android)
+        python -m pip install --upgrade pip==23.1.2 setuptools
+
+        # نصب Cython نسخه سازگار
         pip install Cython==0.29.36
+
         # نصب آخرین Buildozer از GitHub (پشتیبانی بهتر از Python 3.11)
         pip install git+https://github.com/kivy/buildozer.git@master
 
@@ -74,8 +79,6 @@ jobs:
         rm android-ndk-r25b-linux.zip
         mkdir -p /home/runner/.buildozer/android/platform
         mv android-ndk-r25b /home/runner/.buildozer/android/platform/android-ndk-r25b
-        # ساخت symlink برای نام r28c که Buildozer انتظار دارد
-        ln -sfn /home/runner/.buildozer/android/platform/android-ndk-r25b /home/runner/.buildozer/android/platform/android-ndk-r28c
 
     # ساخت symlink برای SDK
     - name: Create SDK symlink for Buildozer
