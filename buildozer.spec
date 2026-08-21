@@ -32,10 +32,10 @@ android.ndk_path = /usr/local/lib/android/sdk/ndk/25.2.9519653
 android.skip_update = True
 
 # نسخه‌ی build-tools که با لایسنس پذیرفته‌شده نصب می‌شود
-android.build_tools_version = 33.0.2
+android.build_tools_version = 35.0.0
 
 # API و NDK
-android.api = 34
+android.api = 35
 android.minapi = 21
 android.ndk = 25b
 android.arch = arm64-v8a
