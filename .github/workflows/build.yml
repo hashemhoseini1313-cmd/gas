@@ -40,7 +40,7 @@ jobs:
         pip install Cython==0.29.36
         pip install buildozer==1.5.0
 
-    # 👇 نصب Android SDK و پذیرش لایسنس‌ها (بدون NDK؛ Buildozer خودش NDK 25b را دانلود می‌کند)
+    # نصب Android SDK و پذیرش لایسنس‌ها
     - name: Install Android SDK and accept licenses
       run: |
         mkdir -p $HOME/android-sdk/cmdline-tools
@@ -53,15 +53,24 @@ jobs:
         export ANDROID_HOME=$HOME/android-sdk
         export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
 
+        # پذیرش همه لایسنس‌ها (باید موفق باشد)
         yes | sdkmanager --licenses > /dev/null 2>&1 || true
+
+        # نصب platform-tools و build-tools نسخه ۳۵
         sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-        # لینک برای ساختار قدیمی SDK که Buildozer انتظار دارد
+        # لینک برای ساختار قدیمی SDK
         mkdir -p $HOME/android-sdk/tools/bin
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/android-sdk/tools/bin/sdkmanager
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager $HOME/android-sdk/tools/bin/avdmanager
 
-    # 👇 پاک‌سازی کامل کش
+    # ایجاد symlink برای مسیر پیش‌فرض Buildozer (مهم!)
+    - name: Create SDK symlink for Buildozer
+      run: |
+        mkdir -p /home/runner/.buildozer/android/platform
+        ln -sfn /home/runner/android-sdk /home/runner/.buildozer/android/platform/android-sdk
+
+    # پاک‌سازی کش
     - name: Clean build cache
       run: |
         rm -rf .buildozer ~/.buildozer
@@ -71,7 +80,6 @@ jobs:
         ANDROID_HOME: /home/runner/android-sdk
         ANDROID_SDK_ROOT: /home/runner/android-sdk
         ANDROIDSDK: /home/runner/android-sdk
-        # PIP_NO_BUILD_ISOLATION را حذف کردیم تا Kivy به‌درستی build شود
       run: |
         buildozer -v android debug
 
