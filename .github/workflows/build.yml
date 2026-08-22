@@ -105,6 +105,12 @@ jobs:
           --add-source=src \
           --service=ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
 
+    - name: Prepare APK
+      run: |
+        mkdir -p bin
+        find . -type f -name "*.apk" -not -path "./bin/*" -exec cp {} bin/ \;
+        ls -lah bin
+
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
