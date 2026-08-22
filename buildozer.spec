@@ -9,7 +9,7 @@ source.include_exts = py,java,png,jpg,kv,ttf,otf
 version = 1.0
 
 # نیازمندی‌ها (پایتون را پین نمی‌کنیم تا سازگاری بهتری با Kivy داشته باشد)
-requirements = python3,kivy==2.2.1,arabic_reshaper,python-bidi
+requirements = python3==3.10.12,kivy==2.1.0,hostpython==3.10.12,arabic_reshaper,python-bidi
 
 orientation = portrait
 fullscreen = 0
