@@ -19,7 +19,7 @@ warn_on_root = 1
 
 [android]
 bootstrap = sdl2
-android.ndk_api = 35
+android.ndk_api = 33
 android.sdk_path = /home/runner/android-sdk
 android.skip_update = True
 android.build_tools_version = 35.0.0
