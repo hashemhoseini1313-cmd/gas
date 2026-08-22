@@ -86,7 +86,7 @@ jobs:
           --name "Screen Recorder" \
           --version 1.0 \
           --bootstrap=sdl2 \
-          --requirements=python3==3.10.12,kivy==2.1.0,arabic_reshaper,python-bidi \
+          --requirements=python3==3.10.12,kivy==2.1.0,arabic_reshaper,python-bidi,pyjnius \
           --arch=arm64-v8a \
           --android-api=35 \
           --ndk-api=33 \
