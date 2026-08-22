@@ -8,7 +8,8 @@ source.include_exts = py,java,png,jpg,kv,ttf,otf
 
 version = 1.0
 
-requirements = python3==3.10.12,kivy==2.1.0,arabic_reshaper,python-bidi
+# نیازمندی‌ها (اضافه کردن pyjnius برای استفاده از اندروید)
+requirements = python3==3.10.12,kivy==2.1.0,arabic_reshaper,python-bidi,pyjnius
 
 orientation = portrait
 fullscreen = 0
@@ -32,4 +33,8 @@ android.permissions = INTERNET,FOREGROUND_SERVICE,FOREGROUND_SERVICE_MEDIA_PROJE
 
 android.add_src = src
 android.manifest_path = manifest.xml
+
+# ثبت سرویس ضبط صفحه (هماهنگ با workflow)
+android.services = ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
+
 android.accept_sdk_license = True
