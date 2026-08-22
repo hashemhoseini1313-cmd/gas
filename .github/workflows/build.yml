@@ -86,6 +86,13 @@ jobs:
         mkdir -p /home/runner/.buildozer/android/platform
         ln -sfn /home/runner/android-sdk /home/runner/.buildozer/android/platform/android-sdk
 
+    # نمایش محتوای buildozer.spec برای اطمینان از تنظیمات
+    - name: Show buildozer.spec
+      run: |
+        cat buildozer.spec
+        echo "--------------------"
+        grep -E "android\.ndk|android\.ndk_api|android\.api|p4a\.ndk_api|requirements" buildozer.spec
+
     - name: Build with Buildozer
       env:
         ANDROID_HOME: /home/runner/android-sdk
