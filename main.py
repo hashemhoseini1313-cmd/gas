@@ -19,7 +19,6 @@ def ftext(text):
     reshaped_text = arabic_reshaper.reshape(text)
     
     # 2. تعویض پرانتزها قبل از معکوس‌سازی کل متن
-    # تا بعد از [::-1] پرانتزها در جای درست قرار بگیرند
     swapped = []
     for char in reshaped_text:
         if char == '(':
@@ -34,7 +33,7 @@ def ftext(text):
     # 3. معکوس کردن کل رشته برای نمایش راست‌به‌چپ
     reversed_text = temp_text[::-1]
     
-    # 4. اصلاح ترتیب اعداد داخل پرانتز یا متن (تا 15 بشه 15 و 51 نشه)
+    # 4. اصلاح ترتیب اعداد داخل پرانتز یا متن
     return re.sub(r'\d+', lambda m: m.group(0)[::-1], reversed_text)
 
 FONT_FILE = "C:\\Windows\\Fonts\\arial.ttf" if platform == "win" else "Roboto"
@@ -42,11 +41,21 @@ FONT_FILE = "C:\\Windows\\Fonts\\arial.ttf" if platform == "win" else "Roboto"
 if platform != "android":
     LabelBase.register(name="PersianFont", fn_regular=FONT_FILE)
 
+# 📱 اگر روی اندروید هستیم، import کتابخانه‌های اندروید را با try-except ایمن می‌کنیم
 if platform == "android":
-    from jnius import autoclass, cast
-    PythonActivity = autoclass("org.kivy.android.PythonActivity")
-    Intent = autoclass("android.content.Intent")
-    Context = autoclass("android.content.Context")
+    try:
+        from jnius import autoclass, cast
+        PythonActivity = autoclass("org.kivy.android.PythonActivity")
+        Intent = autoclass("android.content.Intent")
+        Context = autoclass("android.content.Context")
+    except ImportError as e:
+        # اگر pyjnius نصب نباشد، برنامه crash نمی‌کند و فقط پیام خطا چاپ می‌شود
+        print("⚠️ pyjnius نصب نیست! برنامه نمی‌تواند با سرویس‌های اندروید کار کند.")
+        autoclass = None
+        cast = None
+        PythonActivity = None
+        Intent = None
+        Context = None
 
 class PersianLabel(Label):
     def __init__(self, **kwargs):
@@ -79,7 +88,6 @@ class ScreenRecorderApp(App):
             spacing=15
         )
 
-        # حالا متن را کاملاً معمولی و بدون هیچ دستکاری بنویس:
         title = PersianLabel(
             text="ضبط صفحه گوشی (اندروید 15)",
             font_size="24sp"
@@ -128,6 +136,10 @@ class ScreenRecorderApp(App):
             print("این بخش فقط داخل سیستم‌عامل اندروید اجرا می‌شود.")
             return
 
+        if not autoclass or not PythonActivity:
+            print("❌ pyjnius در دسترس نیست! ضبط صفحه انجام نمی‌شود.")
+            return
+
         try:
             activity = PythonActivity.mActivity
             MediaProjectionManager = autoclass("android.media.projection.MediaProjectionManager")
@@ -143,6 +155,10 @@ class ScreenRecorderApp(App):
 
     def stop_recording(self, instance):
         if platform != "android":
+            return
+
+        if not autoclass or not PythonActivity:
+            print("❌ pyjnius در دسترس نیست! توقف سرویس انجام نمی‌شود.")
             return
 
         try:
