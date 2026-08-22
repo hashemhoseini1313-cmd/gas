@@ -80,6 +80,7 @@ jobs:
         ANDROID_NDK_HOME: /home/runner/.buildozer/android/platform/android-ndk-r25b
         ANDROID_NDK_ROOT: /home/runner/.buildozer/android/platform/android-ndk-r25b
       run: |
+        export PATH="/opt/hostedtoolcache/Python/3.10.12/x64/bin:$PATH"
         p4a apk \
           --private . \
           --package=org.example.screenrecorder \
@@ -101,10 +102,7 @@ jobs:
           --permission READ_EXTERNAL_STORAGE \
           --permission READ_MEDIA_IMAGES \
           --permission READ_MEDIA_VIDEO \
-          --permission POST_NOTIFICATIONS 
-         
-      
-         
+          --permission POST_NOTIFICATIONS
 
     - name: Prepare APK
       run: |
