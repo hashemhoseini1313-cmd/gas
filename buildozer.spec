@@ -31,10 +31,10 @@ android.arch = arm64-v8a
 
 android.permissions = INTERNET,FOREGROUND_SERVICE,FOREGROUND_SERVICE_MEDIA_PROJECTION,RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,READ_MEDIA_IMAGES,READ_MEDIA_VIDEO,POST_NOTIFICATIONS
 
-android.add_src = src
+#android.add_src = src
 android.manifest_path = manifest.xml
 
 # ثبت سرویس ضبط صفحه (هماهنگ با workflow)
-android.services = ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
+#android.services = ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
 
 android.accept_sdk_license = True
