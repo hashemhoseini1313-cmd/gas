@@ -9,7 +9,7 @@ source.include_exts = py,java,png,jpg,kv,ttf,otf
 version = 1.0
 
 # نیازمندی‌ها (اضافه کردن pyjnius برای استفاده از اندروید)
-requirements = python3==3.11.2,kivy==2.3.0,arabic_reshaper,python-bidi,pyjnius
+requirements = python3==3.10.12,kivy==2.3.0,arabic_reshaper,python-bidi,pyjnius
 
 orientation = portrait
 fullscreen = 0
