@@ -103,7 +103,7 @@ jobs:
           --permission READ_MEDIA_VIDEO \
           --permission POST_NOTIFICATIONS \
           --add-source=src \
-          --manifest=manifest.xml
+          --service=ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
 
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
