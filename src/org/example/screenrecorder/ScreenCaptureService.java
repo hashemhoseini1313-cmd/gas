@@ -14,7 +14,6 @@ import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
-import androidx.core.app.NotificationCompat;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -49,12 +48,22 @@ public class ScreenCaptureService extends Service {
             screenHeight = intent.getIntExtra("height", 1280);
             screenDensity = intent.getIntExtra("density", 320);
 
-            Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentTitle("ضبط صفحه نمایش")
-                    .setContentText("برنامه در حال ضبط ویدیو از صفحه است...")
-                    .setSmallIcon(android.R.drawable.ic_menu_camera)
-                    .setPriority(NotificationCompat.PRIORITY_LOW)
-                    .build();
+            Notification notification;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                notification = new Notification.Builder(this, CHANNEL_ID)
+                        .setContentTitle("ضبط صفحه نمایش")
+                        .setContentText("برنامه در حال ضبط ویدیو از صفحه است...")
+                        .setSmallIcon(android.R.drawable.ic_menu_camera)
+                        .setPriority(Notification.PRIORITY_LOW)
+                        .build();
+            } else {
+                notification = new Notification.Builder(this)
+                        .setContentTitle("ضبط صفحه نمایش")
+                        .setContentText("برنامه در حال ضبط ویدیو از صفحه است...")
+                        .setSmallIcon(android.R.drawable.ic_menu_camera)
+                        .setPriority(Notification.PRIORITY_LOW)
+                        .build();
+            }
 
             startForeground(NOTIFICATION_ID, notification);
 
