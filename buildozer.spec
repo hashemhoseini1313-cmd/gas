@@ -25,7 +25,7 @@ android.skip_update = True
 android.build_tools_version = 35.0.0
 android.api = 35
 android.minapi = 21
-android.ndk = 25b
+android.ndk = 28c
 android.arch = arm64-v8a
 
 android.permissions = INTERNET,FOREGROUND_SERVICE,FOREGROUND_SERVICE_MEDIA_PROJECTION,RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,READ_MEDIA_IMAGES,READ_MEDIA_VIDEO,POST_NOTIFICATIONS
