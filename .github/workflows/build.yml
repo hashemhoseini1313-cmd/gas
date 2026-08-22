@@ -82,12 +82,13 @@ jobs:
       run: |
         export PATH="/opt/hostedtoolcache/Python/3.10.12/x64/bin:$PATH"
         p4a apk \
+          --hostpython /opt/hostedtoolcache/Python/3.10.12/x64/bin/python3 \
           --private . \
           --package=org.example.screenrecorder \
           --name "Screen Recorder" \
           --version 1.0 \
           --bootstrap=sdl2 \
-          --requirements=python3==3.10.12,hostpython3==3.10.12,kivy==2.3.0,arabic_reshaper,python-bidi,pyjnius \
+          --requirements=python3==3.10.12,kivy==2.3.0,arabic_reshaper,python-bidi,pyjnius \
           --arch=arm64-v8a \
           --android-api=35 \
           --ndk-api=33 \
