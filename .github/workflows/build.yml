@@ -65,20 +65,20 @@ jobs:
       run: |
         rm -rf .buildozer ~/.buildozer ~/.cache/p4a
 
-    - name: Download and install NDK r27c
+    - name: Download and install NDK r25b
       run: |
-        wget -q https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-        unzip -q android-ndk-r27c-linux.zip
-        rm android-ndk-r27c-linux.zip
+        wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
+        unzip -q android-ndk-r25b-linux.zip
+        rm android-ndk-r25b-linux.zip
         mkdir -p $HOME/.buildozer/android/platform
-        mv android-ndk-r27c $HOME/.buildozer/android/platform/android-ndk-r27c
+        mv android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r25b
 
-    - name: Build with p4a (API 35, NDK r27c)
+    - name: Build with p4a (API 35, NDK r25b, ndk-api 33)
       env:
         ANDROID_HOME: /home/runner/android-sdk
         ANDROID_SDK_ROOT: /home/runner/android-sdk
-        ANDROID_NDK_HOME: /home/runner/.buildozer/android/platform/android-ndk-r27c
-        ANDROID_NDK_ROOT: /home/runner/.buildozer/android/platform/android-ndk-r27c
+        ANDROID_NDK_HOME: /home/runner/.buildozer/android/platform/android-ndk-r25b
+        ANDROID_NDK_ROOT: /home/runner/.buildozer/android/platform/android-ndk-r25b
       run: |
         p4a apk \
           --private . \
@@ -91,7 +91,7 @@ jobs:
           --android-api=35 \
           --ndk-api=33 \
           --sdk-dir=/home/runner/android-sdk \
-          --ndk-dir=/home/runner/.buildozer/android/platform/android-ndk-r27c \
+          --ndk-dir=/home/runner/.buildozer/android/platform/android-ndk-r25b \
           --dist-name=screenrecorder \
           --permission INTERNET \
           --permission FOREGROUND_SERVICE \
