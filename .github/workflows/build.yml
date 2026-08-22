@@ -40,7 +40,7 @@ jobs:
 
         python -m pip install --upgrade pip==23.1.2 setuptools
         pip install Cython==0.29.36
-        pip install python-for-android==2024.01.21
+        pip install git+https://github.com/kivy/python-for-android.git@master
 
     - name: Install Android SDK and accept licenses
       run: |
