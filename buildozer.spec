@@ -9,7 +9,7 @@ source.include_exts = py,java,png,jpg,kv,ttf,otf
 version = 1.0
 
 # نیازمندی‌ها (پایتون ۳.۱۱ برای حل مشکل توابع حذف‌شده)
-requirements = python3==3.11.2,hostpython3==3.11.2,kivy,arabic_reshaper,python-bidi
+requirements = python3==3.11.2,hostpython3==3.11.2,kivy==2.2.1,arabic_reshaper,python-bidi
 
 orientation = portrait
 fullscreen = 0
@@ -18,7 +18,7 @@ fullscreen = 0
 log_level = 2
 warn_on_root = 1
 p4a.ndk_version = 25b
-p4a.branch = develop
+
 [android]
 bootstrap = sdl2
 android.ndk_api = 35
