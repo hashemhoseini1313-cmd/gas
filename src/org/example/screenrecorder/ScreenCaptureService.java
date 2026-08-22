@@ -153,4 +153,4 @@ public class ScreenCaptureService extends Service {
             }
         }
     }
-}
+            }
