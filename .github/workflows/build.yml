@@ -38,13 +38,8 @@ jobs:
         sudo apt install -y --no-install-recommends \
           build-essential libffi-dev libssl-dev ccache git unzip zip zlib1g-dev openjdk-17-jdk
 
-        # نصب pip نسخه سازگار
         python -m pip install --upgrade pip==23.1.2 setuptools
-
-        # نصب Cython نسخه 0.29.36
         pip install Cython==0.29.36
-
-        # نصب python-for-android نسخه پایدار
         pip install python-for-android==2024.01.21
 
     - name: Install Android SDK and accept licenses
@@ -91,10 +86,10 @@ jobs:
           --name "Screen Recorder" \
           --version 1.0 \
           --bootstrap=sdl2 \
-          --requirements=python3,kivy==2.1.0,arabic_reshaper,python-bidi \
+          --requirements=python3==3.10.12,kivy==2.1.0,arabic_reshaper,python-bidi \
           --arch=arm64-v8a \
+          --android-api=35 \
           --ndk-api=35 \
-          --ndk-version=25b \
           --sdk-dir=/home/runner/android-sdk \
           --ndk-dir=/home/runner/.buildozer/android/platform/android-ndk-r25b \
           --dist-name=screenrecorder \
