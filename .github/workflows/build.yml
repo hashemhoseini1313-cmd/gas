@@ -35,18 +35,18 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update -o Acquire::Retries=3
-        sudo apt install -y --no-install-recommends build-essential libffi-dev libssl-dev ccache git unzip zip zlib1g-dev openjdk-17-jdk
+        sudo apt install -y --no-install-recommends \
+          build-essential libffi-dev libssl-dev ccache git unzip zip zlib1g-dev openjdk-17-jdk
 
-        # نصب pip نسخه 23.1.2 (سازگار با python-for-android)
+        # نصب pip نسخه سازگار
         python -m pip install --upgrade pip==23.1.2 setuptools
 
-        # نصب Cython نسخه سازگار
+        # نصب Cython نسخه 0.29.36
         pip install Cython==0.29.36
 
-        # نصب آخرین Buildozer از GitHub (پشتیبانی بهتر از Python 3.11)
-        pip install git+https://github.com/kivy/buildozer.git@master
+        # نصب python-for-android نسخه پایدار
+        pip install python-for-android==2024.01.21
 
-    # نصب Android SDK و پذیرش لایسنس‌ها
     - name: Install Android SDK and accept licenses
       run: |
         mkdir -p $HOME/android-sdk/cmdline-tools
@@ -66,42 +66,49 @@ jobs:
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager $HOME/android-sdk/tools/bin/sdkmanager
         ln -sf $HOME/android-sdk/cmdline-tools/latest/bin/avdmanager $HOME/android-sdk/tools/bin/avdmanager
 
-    # پاک‌سازی کامل کش
     - name: Clean build cache
       run: |
-        rm -rf .buildozer ~/.buildozer
+        rm -rf .buildozer ~/.buildozer ~/.cache/p4a
 
-    # دانلود NDK r25b و قرار دادن در مسیر پیش‌فرض Buildozer
     - name: Download and install NDK r25b
       run: |
         wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
         unzip -q android-ndk-r25b-linux.zip
         rm android-ndk-r25b-linux.zip
-        mkdir -p /home/runner/.buildozer/android/platform
-        mv android-ndk-r25b /home/runner/.buildozer/android/platform/android-ndk-r25b
+        mkdir -p $HOME/.buildozer/android/platform
+        mv android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r25b
 
-    # ساخت symlink برای SDK
-    - name: Create SDK symlink for Buildozer
-      run: |
-        mkdir -p /home/runner/.buildozer/android/platform
-        ln -sfn /home/runner/android-sdk /home/runner/.buildozer/android/platform/android-sdk
-
-    # نمایش محتوای buildozer.spec برای اطمینان از تنظیمات
-    - name: Show buildozer.spec
-      run: |
-        cat buildozer.spec
-        echo "--------------------"
-        grep -E "android\.ndk|android\.ndk_api|android\.api|p4a\.ndk_api|requirements" buildozer.spec
-
-    - name: Build with Buildozer
+    - name: Build with p4a (API 35)
       env:
         ANDROID_HOME: /home/runner/android-sdk
         ANDROID_SDK_ROOT: /home/runner/android-sdk
-        ANDROIDSDK: /home/runner/android-sdk
         ANDROID_NDK_HOME: /home/runner/.buildozer/android/platform/android-ndk-r25b
         ANDROID_NDK_ROOT: /home/runner/.buildozer/android/platform/android-ndk-r25b
       run: |
-        buildozer -v android debug
+        p4a apk \
+          --private . \
+          --package=org.example.screenrecorder \
+          --name "Screen Recorder" \
+          --version 1.0 \
+          --bootstrap=sdl2 \
+          --requirements=python3,kivy==2.1.0,arabic_reshaper,python-bidi \
+          --arch=arm64-v8a \
+          --ndk-api=35 \
+          --ndk-version=25b \
+          --sdk-dir=/home/runner/android-sdk \
+          --ndk-dir=/home/runner/.buildozer/android/platform/android-ndk-r25b \
+          --dist-name=screenrecorder \
+          --permission INTERNET \
+          --permission FOREGROUND_SERVICE \
+          --permission FOREGROUND_SERVICE_MEDIA_PROJECTION \
+          --permission RECORD_AUDIO \
+          --permission WRITE_EXTERNAL_STORAGE \
+          --permission READ_EXTERNAL_STORAGE \
+          --permission READ_MEDIA_IMAGES \
+          --permission READ_MEDIA_VIDEO \
+          --permission POST_NOTIFICATIONS \
+          --add-source=src \
+          --manifest=manifest.xml
 
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
