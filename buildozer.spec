@@ -8,8 +8,8 @@ source.include_exts = py,java,png,jpg,kv,ttf,otf
 
 version = 1.0
 
-# نیازمندی‌ها (پایتون ۳.۱۱ برای حل مشکل توابع حذف‌شده)
-requirements = python3==3.11.2,hostpython3==3.11.2,kivy==2.2.1,arabic_reshaper,python-bidi
+# نیازمندی‌ها (پایتون را پین نمی‌کنیم تا سازگاری بهتری با Kivy داشته باشد)
+requirements = python3,kivy==2.2.1,arabic_reshaper,python-bidi
 
 orientation = portrait
 fullscreen = 0
@@ -18,10 +18,14 @@ fullscreen = 0
 log_level = 2
 warn_on_root = 1
 
+# در برخی نسخه‌ها این خط کمک می‌کند تا NDK API حتماً 35 شود
+p4a.ndk_api = 35
 
 [android]
 bootstrap = sdl2
+
 android.ndk_api = 35
+
 # مسیر SDK
 android.sdk_path = /home/runner/android-sdk
 
