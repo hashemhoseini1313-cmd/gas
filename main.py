@@ -10,7 +10,6 @@ from kivy.utils import platform
 
 import arabic_reshaper
 
-# برای اندروید
 if platform == "android":
     from android import activity as android_activity
     from jnius import autoclass, cast
@@ -18,6 +17,7 @@ if platform == "android":
     PythonActivity = autoclass("org.kivy.android.PythonActivity")
     Intent = autoclass("android.content.Intent")
     Context = autoclass("android.content.Context")
+    Build = autoclass("android.os.Build")   # ← اضافه شد
 
 
 def ftext(text):
@@ -38,7 +38,6 @@ def ftext(text):
     return re.sub(r'\d+', lambda m: m.group(0)[::-1], reversed_text)
 
 
-# فونت فارسی
 if platform == "android":
     FONT_FILE = "fonts/Vazirmatn-Light.ttf"
 else:
@@ -98,7 +97,6 @@ class ScreenRecorderApp(App):
         return layout
 
     def on_activity_result(self, request_code, result_code, data):
-        """دریافت نتیجه مجوز MediaProjection"""
         if request_code == 1001:
             if result_code == -1:  # RESULT_OK
                 self.status_label.text = ftext("مجوز گرفته شد، در حال شروع سرویس...")
@@ -107,18 +105,18 @@ class ScreenRecorderApp(App):
                 self.status_label.text = ftext("مجوز رد شد")
 
     def start_service_with_permission(self, data):
-        """سرویس ضبط را با اطلاعات مجوز شروع می‌کند"""
         try:
             activity = PythonActivity.mActivity
             service_intent = Intent(activity, autoclass("org.example.screenrecorder.ScreenCaptureService"))
             service_intent.putExtra("resultCode", -1)
-            service_intent.putExtra("data", data)
+            # ✅ اصلاح: cast به Parcelable
+            service_intent.putExtra("data", cast('android.os.Parcelable', data))
             service_intent.putExtra("width", 720)
             service_intent.putExtra("height", 1280)
             service_intent.putExtra("density", 320)
 
-            # برای اندروید O به بالا از startForegroundService استفاده می‌کنیم
-            if android_activity.getSDK_INT() >= 26:
+            # ✅ اصلاح: استفاده از Build.VERSION.SDK_INT
+            if Build.VERSION.SDK_INT >= 26:
                 activity.startForegroundService(service_intent)
             else:
                 activity.startService(service_intent)
