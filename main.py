@@ -40,11 +40,11 @@ def ftext(text):
 
 # 📁 مسیر فونت فارسی
 if platform == "android":
-    FONT_FILE = "fonts/arial.ttf"          # فونت باید در پوشه‌ی fonts باشد
+    FONT_FILE = "fonts/arial.ttf"          # فایل فونت باید در پوشه‌ی fonts باشد
 else:
-    FONT_FILE = "C:\\Windows\\Fonts\\arial.ttf"   # برای تست روی ویندوز
+    FONT_FILE = "C:\\Windows\\Fonts\\arial.ttf"
 
-# ثبت فونت (همیشه)
+# ثبت فونت (برای همه‌ی پلتفرم‌ها)
 LabelBase.register(name="PersianFont", fn_regular=FONT_FILE)
 
 # 📱 اگر روی اندروید هستیم، import کتابخانه‌های اندروید را با try-except ایمن می‌کنیم
@@ -67,7 +67,7 @@ class PersianLabel(Label):
     def __init__(self, **kwargs):
         if "text" in kwargs:
             kwargs["text"] = ftext(kwargs["text"])
-        kwargs.setdefault("font_name", "PersianFont")   # همیشه فونت فارسی
+        kwargs.setdefault("font_name", "PersianFont")   # همیشه از فونت فارسی استفاده کن
         kwargs.setdefault("halign", "right")
         kwargs.setdefault("text_size", (None, None))
         super().__init__(**kwargs)
@@ -80,7 +80,7 @@ class PersianButton(Button):
     def __init__(self, **kwargs):
         if "text" in kwargs:
             kwargs["text"] = ftext(kwargs["text"])
-        kwargs.setdefault("font_name", "PersianFont")   # همیشه فونت فارسی
+        kwargs.setdefault("font_name", "PersianFont")   # همیشه از فونت فارسی استفاده کن
         kwargs.setdefault("halign", "center")
         super().__init__(**kwargs)
 
