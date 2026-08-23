@@ -59,7 +59,7 @@ public class ScreenCaptureService extends Service {
             int resultCode = intent.getIntExtra("resultCode", -1);
             Intent data = intent.getParcelableExtra("data");
 
-            // ✅ دریافت ابعاد واقعی صفحه به‌جای مقادیر ثابت
+            // دریافت ابعاد واقعی صفحه
             DisplayMetrics metrics = new DisplayMetrics();
             WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
             wm.getDefaultDisplay().getMetrics(metrics);
@@ -105,7 +105,6 @@ public class ScreenCaptureService extends Service {
         try {
             String fileName = "REC_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".mp4";
 
-            // ابتدا سعی با MediaStore
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ContentValues values = new ContentValues();
                 values.put(MediaStore.Video.Media.DISPLAY_NAME, fileName);
@@ -130,7 +129,6 @@ public class ScreenCaptureService extends Service {
                 }
             }
 
-            // اگر MediaStore موفق نبود، از حافظه اختصاصی برنامه استفاده کن
             if (!usingMediaStore) {
                 File storageDir = new File(getExternalFilesDir(Environment.DIRECTORY_MOVIES), "ScreenRecordings");
                 if (!storageDir.exists()) {
@@ -209,7 +207,6 @@ public class ScreenCaptureService extends Service {
             try { pfd.close(); } catch (IOException e) { e.printStackTrace(); }
             pfd = null;
         }
-        // اگر از MediaStore استفاده شده بود، IS_PENDING را صفر کن تا فایل در گالری ظاهر شود
         if (usingMediaStore && videoUri != null) {
             try {
                 ContentValues values = new ContentValues();
@@ -248,4 +245,3 @@ public class ScreenCaptureService extends Service {
             }
         }
     }
-        }
