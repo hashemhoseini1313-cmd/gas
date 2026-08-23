@@ -45,7 +45,7 @@ else:
     FONT_FILE = "C:\\Windows\\Fonts\\arial.ttf"
 
 # ثبت فونت (برای همه‌ی پلتفرم‌ها)
-LabelBase.register(name="PersianFont", fn_regular=FONT_FILE)
+#LabelBase.register(name="PersianFont", fn_regular=FONT_FILE)
 
 # 📱 اگر روی اندروید هستیم، import کتابخانه‌های اندروید را با try-except ایمن می‌کنیم
 if platform == "android":
