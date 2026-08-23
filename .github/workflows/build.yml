@@ -102,7 +102,9 @@ jobs:
           --permission READ_EXTERNAL_STORAGE \
           --permission READ_MEDIA_IMAGES \
           --permission READ_MEDIA_VIDEO \
-          --permission POST_NOTIFICATIONS
+          --permission POST_NOTIFICATIONS \
+          --add-source=src \
+          --service=ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
 
     - name: Prepare APK
       run: |
