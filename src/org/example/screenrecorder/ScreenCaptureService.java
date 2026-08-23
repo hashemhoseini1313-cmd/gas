@@ -22,6 +22,7 @@ import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,6 +36,7 @@ public class ScreenCaptureService extends Service {
     private static final String TAG = "ScreenCaptureService";
     private static final String CHANNEL_ID = "ScreenCaptureServiceChannel";
     private static final int NOTIFICATION_ID = 1001;
+    public static final String ACTION_STOP = "org.example.screenrecorder.STOP";
 
     private MediaProjection mediaProjection;
     private MediaRecorder mediaRecorder;
@@ -50,6 +52,13 @@ public class ScreenCaptureService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null) {
+            String action = intent.getAction();
+            if (ACTION_STOP.equals(action)) {
+                stopRecording();
+                stopSelf();
+                return START_NOT_STICKY;
+            }
+
             int resultCode = intent.getIntExtra("resultCode", -1);
             Intent data = intent.getParcelableExtra("data");
 
@@ -88,6 +97,7 @@ public class ScreenCaptureService extends Service {
                 mediaProjection = projectionManager.getMediaProjection(resultCode, data);
                 startRecording(width, height, density);
             } else {
+                Toast.makeText(this, "projectionManager or data is null", Toast.LENGTH_LONG).show();
                 Log.e(TAG, "projectionManager or data is null");
             }
         }
@@ -96,7 +106,6 @@ public class ScreenCaptureService extends Service {
 
     private void startRecording(int width, int height, int density) {
         try {
-            // ۱. ذخیره موقت در حافظه خصوصی برنامه
             File storageDir = new File(getExternalFilesDir(Environment.DIRECTORY_MOVIES), "ScreenRecordings");
             if (!storageDir.exists()) {
                 storageDir.mkdirs();
@@ -122,8 +131,10 @@ public class ScreenCaptureService extends Service {
             );
 
             mediaRecorder.start();
+            Toast.makeText(this, "ضبط شروع شد", Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Recording started to private storage: " + videoFile.getAbsolutePath());
         } catch (Exception e) {
+            Toast.makeText(this, "خطا در شروع ضبط", Toast.LENGTH_LONG).show();
             Log.e(TAG, "startRecording failed", e);
             videoFile = null;
         }
@@ -149,10 +160,10 @@ public class ScreenCaptureService extends Service {
             mediaProjection = null;
         }
 
-        // ۲. انتقال فایل به گالری با MediaStore
         if (videoFile != null && videoFile.exists() && videoFile.length() > 0) {
             moveToGallery(videoFile);
         } else {
+            Toast.makeText(this, "فایل ویدیو خالی است", Toast.LENGTH_LONG).show();
             Log.e(TAG, "No valid video file to move to gallery");
         }
         videoFile = null;
@@ -181,16 +192,16 @@ public class ScreenCaptureService extends Service {
                 }
             }
 
-            // نهایی کردن فایل
             values.clear();
             values.put(MediaStore.Video.Media.IS_PENDING, 0);
             resolver.update(uri, values, null, null);
 
-            // حذف نسخه خصوصی (اختیاری)
             sourceFile.delete();
 
+            Toast.makeText(this, "ویدیو در گالری ذخیره شد", Toast.LENGTH_LONG).show();
             Log.d(TAG, "Video moved to gallery: " + uri);
         } catch (Exception e) {
+            Toast.makeText(this, "خطا در انتقال به گالری", Toast.LENGTH_LONG).show();
             Log.e(TAG, "moveToGallery failed", e);
         }
     }
