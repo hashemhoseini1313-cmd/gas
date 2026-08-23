@@ -18,13 +18,14 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
-import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -38,14 +39,7 @@ public class ScreenCaptureService extends Service {
     private MediaProjection mediaProjection;
     private MediaRecorder mediaRecorder;
     private VirtualDisplay virtualDisplay;
-
-    private int screenWidth = 720;
-    private int screenHeight = 1280;
-    private int screenDensity = 320;
-
-    private ParcelFileDescriptor pfd;
-    private Uri videoUri;
-    private boolean usingMediaStore = false;
+    private File videoFile;
 
     @Override
     public void onCreate() {
@@ -59,13 +53,12 @@ public class ScreenCaptureService extends Service {
             int resultCode = intent.getIntExtra("resultCode", -1);
             Intent data = intent.getParcelableExtra("data");
 
-            // دریافت ابعاد واقعی صفحه
             DisplayMetrics metrics = new DisplayMetrics();
             WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
             wm.getDefaultDisplay().getMetrics(metrics);
-            screenWidth = metrics.widthPixels;
-            screenHeight = metrics.heightPixels;
-            screenDensity = metrics.densityDpi;
+            int width = metrics.widthPixels;
+            int height = metrics.heightPixels;
+            int density = metrics.densityDpi;
 
             Notification notification;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -93,7 +86,7 @@ public class ScreenCaptureService extends Service {
             MediaProjectionManager projectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
             if (projectionManager != null && data != null) {
                 mediaProjection = projectionManager.getMediaProjection(resultCode, data);
-                startRecording();
+                startRecording(width, height, density);
             } else {
                 Log.e(TAG, "projectionManager or data is null");
             }
@@ -101,86 +94,38 @@ public class ScreenCaptureService extends Service {
         return START_NOT_STICKY;
     }
 
-    private void startRecording() {
+    private void startRecording(int width, int height, int density) {
         try {
+            // ۱. ذخیره موقت در حافظه خصوصی برنامه
+            File storageDir = new File(getExternalFilesDir(Environment.DIRECTORY_MOVIES), "ScreenRecordings");
+            if (!storageDir.exists()) {
+                storageDir.mkdirs();
+            }
             String fileName = "REC_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".mp4";
+            videoFile = new File(storageDir, fileName);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                ContentValues values = new ContentValues();
-                values.put(MediaStore.Video.Media.DISPLAY_NAME, fileName);
-                values.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
-                values.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/ScreenRecordings");
-                values.put(MediaStore.Video.Media.IS_PENDING, 1);
+            mediaRecorder = new MediaRecorder();
+            mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+            mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            mediaRecorder.setOutputFile(videoFile.getAbsolutePath());
+            mediaRecorder.setVideoSize(width, height);
+            mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+            mediaRecorder.setVideoEncodingBitRate(5120000);
+            mediaRecorder.setVideoFrameRate(30);
+            mediaRecorder.prepare();
 
-                ContentResolver resolver = getContentResolver();
-                videoUri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
-                if (videoUri != null) {
-                    pfd = resolver.openFileDescriptor(videoUri, "w");
-                    if (pfd != null) {
-                        usingMediaStore = true;
-                        Log.d(TAG, "MediaStore file created: " + videoUri);
-                    } else {
-                        Log.e(TAG, "openFileDescriptor returned null, falling back to private storage");
-                        resolver.delete(videoUri, null, null);
-                        videoUri = null;
-                    }
-                } else {
-                    Log.e(TAG, "MediaStore insert returned null, falling back to private storage");
-                }
-            }
+            virtualDisplay = mediaProjection.createVirtualDisplay(
+                    "ScreenCapture",
+                    width, height, density,
+                    DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                    mediaRecorder.getSurface(), null, null
+            );
 
-            if (!usingMediaStore) {
-                File storageDir = new File(getExternalFilesDir(Environment.DIRECTORY_MOVIES), "ScreenRecordings");
-                if (!storageDir.exists()) {
-                    storageDir.mkdirs();
-                }
-                File videoFile = new File(storageDir, fileName);
-                mediaRecorder = new MediaRecorder();
-                mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-                mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                mediaRecorder.setOutputFile(videoFile.getAbsolutePath());
-                mediaRecorder.setVideoSize(screenWidth, screenHeight);
-                mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-                mediaRecorder.setVideoEncodingBitRate(5120000);
-                mediaRecorder.setVideoFrameRate(30);
-                mediaRecorder.prepare();
-                virtualDisplay = mediaProjection.createVirtualDisplay(
-                        "ScreenCapture",
-                        screenWidth, screenHeight, screenDensity,
-                        DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                        mediaRecorder.getSurface(), null, null
-                );
-                mediaRecorder.start();
-                Log.d(TAG, "Recording started to private storage: " + videoFile.getAbsolutePath());
-            } else {
-                mediaRecorder = new MediaRecorder();
-                mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
-                mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                mediaRecorder.setOutputFile(pfd.getFileDescriptor());
-                mediaRecorder.setVideoSize(screenWidth, screenHeight);
-                mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-                mediaRecorder.setVideoEncodingBitRate(5120000);
-                mediaRecorder.setVideoFrameRate(30);
-                mediaRecorder.prepare();
-                virtualDisplay = mediaProjection.createVirtualDisplay(
-                        "ScreenCapture",
-                        screenWidth, screenHeight, screenDensity,
-                        DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                        mediaRecorder.getSurface(), null, null
-                );
-                mediaRecorder.start();
-                Log.d(TAG, "Recording started to MediaStore");
-            }
+            mediaRecorder.start();
+            Log.d(TAG, "Recording started to private storage: " + videoFile.getAbsolutePath());
         } catch (Exception e) {
             Log.e(TAG, "startRecording failed", e);
-            if (videoUri != null) {
-                getContentResolver().delete(videoUri, null, null);
-            }
-            if (pfd != null) {
-                try { pfd.close(); } catch (IOException ignored) {}
-            }
-            videoUri = null;
-            pfd = null;
+            videoFile = null;
         }
     }
 
@@ -203,22 +148,51 @@ public class ScreenCaptureService extends Service {
             mediaProjection.stop();
             mediaProjection = null;
         }
-        if (pfd != null) {
-            try { pfd.close(); } catch (IOException e) { e.printStackTrace(); }
-            pfd = null;
+
+        // ۲. انتقال فایل به گالری با MediaStore
+        if (videoFile != null && videoFile.exists() && videoFile.length() > 0) {
+            moveToGallery(videoFile);
+        } else {
+            Log.e(TAG, "No valid video file to move to gallery");
         }
-        if (usingMediaStore && videoUri != null) {
-            try {
-                ContentValues values = new ContentValues();
-                values.put(MediaStore.Video.Media.IS_PENDING, 0);
-                getContentResolver().update(videoUri, values, null, null);
-                Log.d(TAG, "IS_PENDING set to 0");
-            } catch (Exception e) {
-                Log.e(TAG, "Failed to update IS_PENDING", e);
+        videoFile = null;
+    }
+
+    private void moveToGallery(File sourceFile) {
+        try {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Video.Media.DISPLAY_NAME, sourceFile.getName());
+            values.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
+            values.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/ScreenRecordings");
+            values.put(MediaStore.Video.Media.IS_PENDING, 1);
+
+            ContentResolver resolver = getContentResolver();
+            Uri uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+            if (uri == null) {
+                throw new IOException("MediaStore insert failed");
             }
+
+            try (OutputStream out = resolver.openOutputStream(uri);
+                 FileInputStream in = new FileInputStream(sourceFile)) {
+                byte[] buffer = new byte[1024];
+                int len;
+                while ((len = in.read(buffer)) > 0) {
+                    out.write(buffer, 0, len);
+                }
+            }
+
+            // نهایی کردن فایل
+            values.clear();
+            values.put(MediaStore.Video.Media.IS_PENDING, 0);
+            resolver.update(uri, values, null, null);
+
+            // حذف نسخه خصوصی (اختیاری)
+            sourceFile.delete();
+
+            Log.d(TAG, "Video moved to gallery: " + uri);
+        } catch (Exception e) {
+            Log.e(TAG, "moveToGallery failed", e);
         }
-        usingMediaStore = false;
-        videoUri = null;
     }
 
     @Override
@@ -245,4 +219,4 @@ public class ScreenCaptureService extends Service {
             }
         }
     }
- }
+}
