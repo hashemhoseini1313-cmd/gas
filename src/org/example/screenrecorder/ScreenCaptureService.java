@@ -84,7 +84,8 @@ public class ScreenCaptureService extends Service {
 
     private void startRecording() {
         try {
-            File storageDir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "ScreenRecordings");
+            // ✅ استفاده از حافظه اختصاصی برنامه (سازگار با اندروید ۱۰ و بالاتر)
+            File storageDir = new File(getExternalFilesDir(Environment.DIRECTORY_MOVIES), "ScreenRecordings");
             if (!storageDir.exists()) {
                 storageDir.mkdirs();
             }
@@ -109,7 +110,7 @@ public class ScreenCaptureService extends Service {
             );
 
             mediaRecorder.start();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
