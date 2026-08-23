@@ -146,7 +146,8 @@ class ScreenRecorderApp(App):
         try:
             activity = PythonActivity.mActivity
             service_intent = Intent(activity, autoclass("org.example.screenrecorder.ScreenCaptureService"))
-            activity.stopService(service_intent)
+            service_intent.setAction("org.example.screenrecorder.STOP")
+            activity.startService(service_intent)   # ارسال اکشن STOP به سرویس
             self.status_label.text = ftext("سرویس متوقف شد")
         except Exception as e:
             self.status_label.text = ftext(f"خطا در توقف سرویس: {e}")
