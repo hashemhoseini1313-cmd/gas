@@ -17,7 +17,7 @@ if platform == "android":
     PythonActivity = autoclass("org.kivy.android.PythonActivity")
     Intent = autoclass("android.content.Intent")
     Context = autoclass("android.content.Context")
-    Build = autoclass("android.os.Build")   # ← اضافه شد
+    BuildVersion = autoclass('android.os.Build$VERSION')   # ✅ اصلاح شد
 
 
 def ftext(text):
@@ -115,8 +115,8 @@ class ScreenRecorderApp(App):
             service_intent.putExtra("height", 1280)
             service_intent.putExtra("density", 320)
 
-            # ✅ اصلاح: استفاده از Build.VERSION.SDK_INT
-            if Build.VERSION.SDK_INT >= 26:
+            # ✅ اصلاح: استفاده از BuildVersion.SDK_INT
+            if BuildVersion.SDK_INT >= 26:
                 activity.startForegroundService(service_intent)
             else:
                 activity.startService(service_intent)
