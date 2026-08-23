@@ -6,7 +6,7 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ServiceInfo;  // ← اضافه شد
+import android.content.pm.ServiceInfo;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.MediaRecorder;
@@ -66,7 +66,7 @@ public class ScreenCaptureService extends Service {
                         .build();
             }
 
-            // ✅ اصلاح: برای اندروید ۱۰ و بالاتر باید foregroundServiceType مشخص شود
+            // اندروید ۱۰ به بالا: foregroundServiceType ضروری است
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
             } else {
@@ -159,4 +159,4 @@ public class ScreenCaptureService extends Service {
             }
         }
     }
- }
+}
