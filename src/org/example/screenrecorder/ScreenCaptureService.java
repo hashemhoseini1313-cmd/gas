@@ -20,7 +20,9 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.WindowManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,9 +58,14 @@ public class ScreenCaptureService extends Service {
         if (intent != null) {
             int resultCode = intent.getIntExtra("resultCode", -1);
             Intent data = intent.getParcelableExtra("data");
-            screenWidth = intent.getIntExtra("width", 720);
-            screenHeight = intent.getIntExtra("height", 1280);
-            screenDensity = intent.getIntExtra("density", 320);
+
+            // ✅ دریافت ابعاد واقعی صفحه به‌جای مقادیر ثابت
+            DisplayMetrics metrics = new DisplayMetrics();
+            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+            wm.getDefaultDisplay().getMetrics(metrics);
+            screenWidth = metrics.widthPixels;
+            screenHeight = metrics.heightPixels;
+            screenDensity = metrics.densityDpi;
 
             Notification notification;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -241,4 +248,4 @@ public class ScreenCaptureService extends Service {
             }
         }
     }
-}
+        }
