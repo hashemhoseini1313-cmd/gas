@@ -67,7 +67,7 @@ class PersianLabel(Label):
     def __init__(self, **kwargs):
         if "text" in kwargs:
             kwargs["text"] = ftext(kwargs["text"])
-        kwargs.setdefault("font_name", "PersianFont")   # همیشه از فونت فارسی استفاده کن
+        #kwargs.setdefault("font_name", "PersianFont")   # همیشه از فونت فارسی استفاده کن
         kwargs.setdefault("halign", "right")
         kwargs.setdefault("text_size", (None, None))
         super().__init__(**kwargs)
