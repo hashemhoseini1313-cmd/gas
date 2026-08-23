@@ -34,7 +34,7 @@ android.permissions = INTERNET,FOREGROUND_SERVICE,FOREGROUND_SERVICE_MEDIA_PROJE
 android.add_src = src
 android.manifest_path = manifest.xml
 
- ثبت سرویس ضبط صفحه (هماهنگ با workflow)
+ #ثبت سرویس ضبط صفحه (هماهنگ با workflow)
 android.services = ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
 
 android.accept_sdk_license = True
