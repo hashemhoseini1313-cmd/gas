@@ -4,6 +4,8 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
@@ -12,10 +14,12 @@ import android.hardware.display.VirtualDisplay;
 import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
-import java.io.File;
+import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -32,7 +36,9 @@ public class ScreenCaptureService extends Service {
     private int screenWidth = 720;
     private int screenHeight = 1280;
     private int screenDensity = 320;
-    private String videoPath = "";
+
+    private ParcelFileDescriptor pfd;
+    private Uri videoUri;
 
     @Override
     public void onCreate() {
@@ -66,7 +72,6 @@ public class ScreenCaptureService extends Service {
                         .build();
             }
 
-            // اندروید ۱۰ به بالا: foregroundServiceType ضروری است
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
             } else {
@@ -84,18 +89,28 @@ public class ScreenCaptureService extends Service {
 
     private void startRecording() {
         try {
-            // ✅ استفاده از حافظه اختصاصی برنامه (سازگار با اندروید ۱۰ و بالاتر)
-            File storageDir = new File(getExternalFilesDir(Environment.DIRECTORY_MOVIES), "ScreenRecordings");
-            if (!storageDir.exists()) {
-                storageDir.mkdirs();
+            // ۱. ایجاد ورودی جدید در MediaStore برای ذخیره ویدیو در Movies
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Video.Media.DISPLAY_NAME, "REC_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".mp4");
+            values.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
+            values.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/ScreenRecordings");
+            values.put(MediaStore.Video.Media.IS_PENDING, 1);
+
+            ContentResolver resolver = getContentResolver();
+            videoUri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+            if (videoUri == null) {
+                throw new IOException("Failed to create new MediaStore record.");
             }
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-            videoPath = new File(storageDir, "REC_" + timeStamp + ".mp4").getAbsolutePath();
+
+            pfd = resolver.openFileDescriptor(videoUri, "w");
+            if (pfd == null) {
+                throw new IOException("Failed to open file descriptor.");
+            }
 
             mediaRecorder = new MediaRecorder();
             mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
             mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            mediaRecorder.setOutputFile(videoPath);
+            mediaRecorder.setOutputFile(pfd.getFileDescriptor());
             mediaRecorder.setVideoSize(screenWidth, screenHeight);
             mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
             mediaRecorder.setVideoEncodingBitRate(5120000);
@@ -110,8 +125,21 @@ public class ScreenCaptureService extends Service {
             );
 
             mediaRecorder.start();
+
+            // بعد از شروع ضبط، وضعیت IS_PENDING را صفر می‌کنیم تا فایل در گالری ظاهر شود
+            values.clear();
+            values.put(MediaStore.Video.Media.IS_PENDING, 0);
+            resolver.update(videoUri, values, null, null);
+
         } catch (Exception e) {
             e.printStackTrace();
+            // در صورت خطا، فایل ناقص را پاک می‌کنیم
+            if (videoUri != null) {
+                getContentResolver().delete(videoUri, null, null);
+            }
+            if (pfd != null) {
+                try { pfd.close(); } catch (IOException ignored) {}
+            }
         }
     }
 
@@ -133,6 +161,16 @@ public class ScreenCaptureService extends Service {
         if (mediaProjection != null) {
             mediaProjection.stop();
             mediaProjection = null;
+        }
+        if (pfd != null) {
+            try { pfd.close(); } catch (IOException e) { e.printStackTrace(); }
+            pfd = null;
+        }
+        // اگر videoUri وجود داشت و ضبط موفق بود، IS_PENDING صفر می‌شود تا در گالری قابل مشاهده باشد
+        if (videoUri != null) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Video.Media.IS_PENDING, 0);
+            getContentResolver().update(videoUri, values, null, null);
         }
     }
 
@@ -160,4 +198,4 @@ public class ScreenCaptureService extends Service {
             }
         }
     }
-}
+    }
