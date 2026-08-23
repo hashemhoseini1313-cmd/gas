@@ -40,7 +40,7 @@ def ftext(text):
 
 # 📁 مسیر فونت فارسی
 if platform == "android":
-    FONT_FILE = "fonts/arial.ttf"          # فایل فونت باید در پوشه‌ی fonts باشد
+    FONT_FILE = "fonts/Vazirmatn-Light.ttf"   # ← نام دقیق فایل آپلودشده
 else:
     FONT_FILE = "C:\\Windows\\Fonts\\arial.ttf"
 
