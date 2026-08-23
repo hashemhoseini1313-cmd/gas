@@ -1,49 +1,4 @@
-if not autoclass or not PythonActivity:
-            print("❌ pyjnius در دسترس نیست! ضبط صفحه انجام نمی‌شود.")
-            return
-
-        try:
-            activity = PythonActivity.mActivity
-            MediaProjectionManager = autoclass("android.media.projection.MediaProjectionManager")
-            
-            projection_service = activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE)
-            mgr = cast(MediaProjectionManager, projection_service)
-            
-            intent = mgr.createScreenCaptureIntent()
-            activity.startActivityForResult(intent, 1001)
-            print("درخواست مجوز MediaProjection ارسال شد.")
-        except Exception as e:
-            print("خطا در شروع ضبط:", e)
-
-    def stop_recording(self, instance):
-        if platform != "android":
-            return
-
-        if not autoclass or not PythonActivity:
-            print("❌ pyjnius در دسترس نیست! توقف سرویس انجام نمی‌شود.")
-            return
-
-        try:
-            activity = PythonActivity.mActivity
-            service_intent = Intent(activity, autoclass("org.kivy.android.PythonService"))
-            activity.stopService(service_intent)
-            print("سرویس ضبط متوقف شد.")
-        except Exception as e:
-            print("خطا در توقف سرویس:", e)
-
-    def take_screenshot(self, instance):
-        if platform != "android":
-            print("درخواست عکس از صفحه (روی سیستم‌عامل ویندوز فعال نیست)")
-            return
-
-        try:
-            print("درخواست گرفتن عکس از صفحه ارسال شد.")
-        except Exception as e:
-            print("خطا در گرفتن اسکرین‌شات:", e)
-
-if name == "main":
-    ScreenRecorderApp().run()
-    # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import re
 from kivy.app import App
@@ -55,14 +10,15 @@ from kivy.utils import platform
 
 import arabic_reshaper
 
+
 def ftext(text):
     """اصلاح چسبندگی حروف، معکوس‌سازی و اصلاح هوشمند جابه‌جایی پرانتزها"""
     if not text:
         return ""
-    
+
     # 1. چسباندن حروف فارسی
     reshaped_text = arabic_reshaper.reshape(text)
-    
+
     # 2. تعویض پرانتزها قبل از معکوس‌سازی کل متن
     swapped = []
     for char in reshaped_text:
@@ -72,14 +28,15 @@ def ftext(text):
             swapped.append('(')
         else:
             swapped.append(char)
-    
+
     temp_text = "".join(swapped)
-    
+
     # 3. معکوس کردن کل رشته برای نمایش راست‌به‌چپ
     reversed_text = temp_text[::-1]
-    
+
     # 4. اصلاح ترتیب اعداد داخل پرانتز یا متن
     return re.sub(r'\d+', lambda m: m.group(0)[::-1], reversed_text)
+
 
 FONT_FILE = "C:\\Windows\\Fonts\\arial.ttf" if platform == "win" else "Roboto"
 
@@ -93,8 +50,7 @@ if platform == "android":
         PythonActivity = autoclass("org.kivy.android.PythonActivity")
         Intent = autoclass("android.content.Intent")
         Context = autoclass("android.content.Context")
-    except ImportError as e:
-        # اگر pyjnius نصب نباشد، برنامه crash نمی‌کند و فقط پیام خطا چاپ می‌شود
+    except ImportError:
         print("⚠️ pyjnius نصب نیست! برنامه نمی‌تواند با سرویس‌های اندروید کار کند.")
         autoclass = None
         cast = None
@@ -102,30 +58,32 @@ if platform == "android":
         Intent = None
         Context = None
 
+
 class PersianLabel(Label):
-    def init(self, **kwargs):
+    def __init__(self, **kwargs):
         if "text" in kwargs:
             kwargs["text"] = ftext(kwargs["text"])
         if platform != "android":
             kwargs.setdefault("font_name", "PersianFont")
         kwargs.setdefault("halign", "right")
         kwargs.setdefault("text_size", (None, None))
-        super().init(**kwargs)
+        super().__init__(**kwargs)
 
     def on_size(self, *args):
         self.text_size = (self.width, None)
 
+
 class PersianButton(Button):
-    def init(self, **kwargs):
+    def __init__(self, **kwargs):
         if "text" in kwargs:
             kwargs["text"] = ftext(kwargs["text"])
         if platform != "android":
             kwargs.setdefault("font_name", "PersianFont")
         kwargs.setdefault("halign", "center")
-        super().init(**kwargs)
+        super().__init__(**kwargs)
+
 
 class ScreenRecorderApp(App):
-
     def build(self):
         layout = BoxLayout(
             orientation="vertical",
@@ -180,3 +138,50 @@ class ScreenRecorderApp(App):
         if platform != "android":
             print("این بخش فقط داخل سیستم‌عامل اندروید اجرا می‌شود.")
             return
+
+        if not autoclass or not PythonActivity:
+            print("❌ pyjnius در دسترس نیست! ضبط صفحه انجام نمی‌شود.")
+            return
+
+        try:
+            activity = PythonActivity.mActivity
+            MediaProjectionManager = autoclass("android.media.projection.MediaProjectionManager")
+
+            projection_service = activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE)
+            mgr = cast(MediaProjectionManager, projection_service)
+
+            intent = mgr.createScreenCaptureIntent()
+            activity.startActivityForResult(intent, 1001)
+            print("درخواست مجوز MediaProjection ارسال شد.")
+        except Exception as e:
+            print("خطا در شروع ضبط:", e)
+
+    def stop_recording(self, instance):
+        if platform != "android":
+            return
+
+        if not autoclass or not PythonActivity:
+            print("❌ pyjnius در دسترس نیست! توقف سرویس انجام نمی‌شود.")
+            return
+
+        try:
+            activity = PythonActivity.mActivity
+            service_intent = Intent(activity, autoclass("org.kivy.android.PythonService"))
+            activity.stopService(service_intent)
+            print("سرویس ضبط متوقف شد.")
+        except Exception as e:
+            print("خطا در توقف سرویس:", e)
+
+    def take_screenshot(self, instance):
+        if platform != "android":
+            print("درخواست عکس از صفحه (روی سیستم‌عامل ویندوز فعال نیست)")
+            return
+
+        try:
+            print("درخواست گرفتن عکس از صفحه ارسال شد.")
+        except Exception as e:
+            print("خطا در گرفتن اسکرین‌شات:", e)
+
+
+if __name__ == "__main__":
+    ScreenRecorderApp().run()
