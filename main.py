@@ -80,7 +80,7 @@ class PersianButton(Button):
     def __init__(self, **kwargs):
         if "text" in kwargs:
             kwargs["text"] = ftext(kwargs["text"])
-        kwargs.setdefault("font_name", "PersianFont")   # همیشه از فونت فارسی استفاده کن
+        #kwargs.setdefault("font_name", "PersianFont")   # همیشه از فونت فارسی استفاده کن
         kwargs.setdefault("halign", "center")
         super().__init__(**kwargs)
 
