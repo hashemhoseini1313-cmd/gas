@@ -84,6 +84,13 @@ jobs:
         echo "-----------------------------"
         grep -E "ndk|ndk_api|p4a.ndk_api|build_tools|android.ndk" buildozer.spec
 
+    - name: Force minapi and ndk_api to 26
+      run: |
+        sed -i 's/android.minapi = 21/android.minapi = 26/' buildozer.spec
+        sed -i 's/android.ndk_api = 21/android.ndk_api = 26/' buildozer.spec
+        sed -i 's/p4a.ndk_api = 21/p4a.ndk_api = 26/' buildozer.spec
+        grep -E "minapi|ndk_api|p4a.ndk_api" buildozer.spec
+
     - name: Build with Buildozer
       env:
         ANDROID_HOME: /home/runner/android-sdk
@@ -92,10 +99,10 @@ jobs:
         ANDROID_NDK_HOME: /home/runner/.buildozer/android/platform/android-ndk-r25b
         ANDROID_NDK_ROOT: /home/runner/.buildozer/android/platform/android-ndk-r25b
       run: |
-        export PATH="/opt/hostedtoolcache/Python/3.10.12/x64/bin:$PATH"                                                               
+        export PATH="/opt/hostedtoolcache/Python/3.10.12/x64/bin:$PATH"
         export P4A_NDK_API=26
         buildozer -v android debug
-        
+
     - name: Prepare APK
       run: |
         mkdir -p bin
