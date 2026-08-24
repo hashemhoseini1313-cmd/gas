@@ -52,9 +52,12 @@ public class ScreenCaptureService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Toast.makeText(this, "onStartCommand called", Toast.LENGTH_SHORT).show();
+
         if (intent != null) {
             String action = intent.getAction();
             if (ACTION_STOP.equals(action)) {
+                Toast.makeText(this, "Action STOP received", Toast.LENGTH_SHORT).show();
                 stopRecording();
                 stopForeground(true);
                 stopSelf();
@@ -63,6 +66,7 @@ public class ScreenCaptureService extends Service {
 
             int resultCode = intent.getIntExtra("resultCode", -1);
             Intent data = intent.getParcelableExtra("data");
+            Toast.makeText(this, "resultCode=" + resultCode + " data=" + (data != null), Toast.LENGTH_LONG).show();
 
             // ۱. ناتیفیکیشن پیش‌زمینه
             Notification notification;
@@ -105,6 +109,7 @@ public class ScreenCaptureService extends Service {
             MediaProjectionManager projectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
             if (projectionManager != null && data != null) {
                 mediaProjection = projectionManager.getMediaProjection(resultCode, data);
+                Toast.makeText(this, "MediaProjection created", Toast.LENGTH_SHORT).show();
 
                 // ⚠️ شرط اجباری برای اندروید ۱۴ و ۱۵: ثبت Callback
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -120,6 +125,7 @@ public class ScreenCaptureService extends Service {
 
                 startRecording(width, height, density);
             } else {
+                Toast.makeText(this, "projectionManager or data is null", Toast.LENGTH_LONG).show();
                 Log.e(TAG, "projectionManager or data is null");
                 stopSelf();
             }
@@ -142,7 +148,7 @@ public class ScreenCaptureService extends Service {
             mediaRecorder.setOutputFile(videoFile.getAbsolutePath());
             mediaRecorder.setVideoSize(width, height);
             mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-            mediaRecorder.setVideoEncodingBitRate(6000000); // 6 Mbps
+            mediaRecorder.setVideoEncodingBitRate(6000000);
             mediaRecorder.setVideoFrameRate(30);
             mediaRecorder.prepare();
 
@@ -154,8 +160,10 @@ public class ScreenCaptureService extends Service {
             );
 
             mediaRecorder.start();
+            Toast.makeText(this, "ضبط شروع شد", Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Recording started to: " + videoFile.getAbsolutePath());
         } catch (Exception e) {
+            Toast.makeText(this, "خطا در شروع ضبط", Toast.LENGTH_LONG).show();
             Log.e(TAG, "startRecording failed", e);
             stopRecording();
             stopSelf();
@@ -188,6 +196,7 @@ public class ScreenCaptureService extends Service {
         if (videoFile != null && videoFile.exists() && videoFile.length() > 0) {
             moveToGallery(videoFile);
         } else {
+            Toast.makeText(this, "فایل ویدیو خالی است", Toast.LENGTH_LONG).show();
             Log.e(TAG, "No valid video file to move to gallery");
         }
         videoFile = null;
@@ -218,9 +227,13 @@ public class ScreenCaptureService extends Service {
                 resolver.update(uri, values, null, null);
 
                 sourceFile.delete();
+                Toast.makeText(this, "ویدیو در گالری ذخیره شد", Toast.LENGTH_LONG).show();
                 Log.d(TAG, "Video moved to gallery: " + uri);
+            } else {
+                Toast.makeText(this, "MediaStore insert failed", Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
+            Toast.makeText(this, "خطا در انتقال به گالری", Toast.LENGTH_LONG).show();
             Log.e(TAG, "moveToGallery failed", e);
         }
     }
