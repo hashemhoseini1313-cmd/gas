@@ -17,7 +17,7 @@ fullscreen = 0
 [buildozer]
 log_level = 2
 warn_on_root = 1
-p4a.ndk_api= 26
+p4a.ndk_api = 26
 p4a.ndk_version = 25b
 [android]
 bootstrap = sdl2
