@@ -8,6 +8,7 @@ source.include_exts = py,java,png,jpg,kv,ttf,otf
 
 version = 1.0
 
+# نیازمندی‌ها (پایتون و کتابخانه‌ها)
 requirements = python3==3.10.12,hostpython3==3.10.12,kivy==2.3.0,arabic_reshaper,python-bidi,pyjnius
 
 orientation = portrait
@@ -30,9 +31,9 @@ android.arch = arm64-v8a
 
 android.permissions = INTERNET,FOREGROUND_SERVICE,FOREGROUND_SERVICE_MEDIA_PROJECTION,RECORD_AUDIO,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE,READ_MEDIA_IMAGES,READ_MEDIA_VIDEO,POST_NOTIFICATIONS
 
+# فعال‌سازی سرویس جاوا (مهم)
 android.add_src = src
 android.manifest_path = manifest.xml
-
-# ⚠️ خط android.services حتماً باید اینجا نباشد (حذف شد)
+android.services = ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
 
 android.accept_sdk_license = True
