@@ -92,9 +92,10 @@ jobs:
         ANDROID_NDK_HOME: /home/runner/.buildozer/android/platform/android-ndk-r25b
         ANDROID_NDK_ROOT: /home/runner/.buildozer/android/platform/android-ndk-r25b
       run: |
-        export PATH="/opt/hostedtoolcache/Python/3.10.12/x64/bin:$PATH"
-        buildozer -v android debug
+        export PATH="/opt/hostedtoolcache/Python/3.10.12/x64/bin:$PATH"                                                               
         export P4A_NDK_API=26
+        buildozer -v android debug
+        
     - name: Prepare APK
       run: |
         mkdir -p bin
