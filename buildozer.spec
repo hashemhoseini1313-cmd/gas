@@ -34,6 +34,6 @@ android.permissions = INTERNET,FOREGROUND_SERVICE,FOREGROUND_SERVICE_MEDIA_PROJE
 # فعال‌سازی سرویس جاوا (مهم)
 android.add_src = src
 android.manifest_path = manifest.xml
-android.services = ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
+#android.services = ScreenCaptureService:org.example.screenrecorder.ScreenCaptureService
 
 android.accept_sdk_license = True
