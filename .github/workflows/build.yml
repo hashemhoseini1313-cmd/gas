@@ -40,7 +40,7 @@ jobs:
 
         python -m pip install --upgrade pip==23.1.2 setuptools
         pip install Cython==0.29.36
-        pip install git+https://github.com/kivy/buildozer.git@master
+        pip install buildozer==1.5.0
 
     - name: Install Android SDK and accept licenses
       run: |
@@ -73,7 +73,6 @@ jobs:
         mkdir -p $HOME/.buildozer/android/platform
         mv android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r25b
 
-    # ✅ مرحله جدید: لینک SDK به مسیر پیش‌فرض Buildozer
     - name: Create SDK symlink for Buildozer
       run: |
         mkdir -p $HOME/.buildozer/android/platform
