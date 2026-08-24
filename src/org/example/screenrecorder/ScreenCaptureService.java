@@ -42,6 +42,7 @@ public class ScreenCaptureService extends Service {
     private MediaRecorder mediaRecorder;
     private VirtualDisplay virtualDisplay;
     private File videoFile;
+    private MediaProjection.Callback projectionCallback;
 
     @Override
     public void onCreate() {
@@ -55,6 +56,7 @@ public class ScreenCaptureService extends Service {
             String action = intent.getAction();
             if (ACTION_STOP.equals(action)) {
                 stopRecording();
+                stopForeground(true);
                 stopSelf();
                 return START_NOT_STICKY;
             }
@@ -62,25 +64,19 @@ public class ScreenCaptureService extends Service {
             int resultCode = intent.getIntExtra("resultCode", -1);
             Intent data = intent.getParcelableExtra("data");
 
-            DisplayMetrics metrics = new DisplayMetrics();
-            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-            wm.getDefaultDisplay().getMetrics(metrics);
-            int width = metrics.widthPixels;
-            int height = metrics.heightPixels;
-            int density = metrics.densityDpi;
-
+            // ۱. ناتیفیکیشن پیش‌زمینه
             Notification notification;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 notification = new Notification.Builder(this, CHANNEL_ID)
                         .setContentTitle("ضبط صفحه نمایش")
-                        .setContentText("برنامه در حال ضبط ویدیو از صفحه است...")
+                        .setContentText("در حال ضبط ویدیو...")
                         .setSmallIcon(android.R.drawable.ic_menu_camera)
                         .setPriority(Notification.PRIORITY_LOW)
                         .build();
             } else {
                 notification = new Notification.Builder(this)
                         .setContentTitle("ضبط صفحه نمایش")
-                        .setContentText("برنامه در حال ضبط ویدیو از صفحه است...")
+                        .setContentText("در حال ضبط ویدیو...")
                         .setSmallIcon(android.R.drawable.ic_menu_camera)
                         .setPriority(Notification.PRIORITY_LOW)
                         .build();
@@ -92,13 +88,40 @@ public class ScreenCaptureService extends Service {
                 startForeground(NOTIFICATION_ID, notification);
             }
 
+            // ۲. محاسبه دقیق ابعاد و زوج‌سازی رزولوشن
+            DisplayMetrics metrics = new DisplayMetrics();
+            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+            if (wm != null) {
+                wm.getDefaultDisplay().getRealMetrics(metrics);
+            }
+            int width = metrics.widthPixels;
+            int height = metrics.heightPixels;
+            int density = metrics.densityDpi;
+
+            // ⚠️ حتماً ابعاد باید عدد زوج باشند تا MediaEncoder کرش نکند
+            if (width % 2 != 0) width -= 1;
+            if (height % 2 != 0) height -= 1;
+
             MediaProjectionManager projectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
             if (projectionManager != null && data != null) {
                 mediaProjection = projectionManager.getMediaProjection(resultCode, data);
+
+                // ⚠️ شرط اجباری برای اندروید ۱۴ و ۱۵: ثبت Callback
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    projectionCallback = new MediaProjection.Callback() {
+                        @Override
+                        public void onStop() {
+                            super.onStop();
+                            stopRecording();
+                        }
+                    };
+                    mediaProjection.registerCallback(projectionCallback, null);
+                }
+
                 startRecording(width, height, density);
             } else {
-                Toast.makeText(this, "projectionManager or data is null", Toast.LENGTH_LONG).show();
                 Log.e(TAG, "projectionManager or data is null");
+                stopSelf();
             }
         }
         return START_NOT_STICKY;
@@ -119,7 +142,7 @@ public class ScreenCaptureService extends Service {
             mediaRecorder.setOutputFile(videoFile.getAbsolutePath());
             mediaRecorder.setVideoSize(width, height);
             mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-            mediaRecorder.setVideoEncodingBitRate(5120000);
+            mediaRecorder.setVideoEncodingBitRate(6000000); // 6 Mbps
             mediaRecorder.setVideoFrameRate(30);
             mediaRecorder.prepare();
 
@@ -131,12 +154,11 @@ public class ScreenCaptureService extends Service {
             );
 
             mediaRecorder.start();
-            Toast.makeText(this, "ضبط شروع شد", Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "Recording started to private storage: " + videoFile.getAbsolutePath());
+            Log.d(TAG, "Recording started to: " + videoFile.getAbsolutePath());
         } catch (Exception e) {
-            Toast.makeText(this, "خطا در شروع ضبط", Toast.LENGTH_LONG).show();
             Log.e(TAG, "startRecording failed", e);
-            videoFile = null;
+            stopRecording();
+            stopSelf();
         }
     }
 
@@ -156,6 +178,9 @@ public class ScreenCaptureService extends Service {
             virtualDisplay = null;
         }
         if (mediaProjection != null) {
+            if (projectionCallback != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                mediaProjection.unregisterCallback(projectionCallback);
+            }
             mediaProjection.stop();
             mediaProjection = null;
         }
@@ -163,7 +188,6 @@ public class ScreenCaptureService extends Service {
         if (videoFile != null && videoFile.exists() && videoFile.length() > 0) {
             moveToGallery(videoFile);
         } else {
-            Toast.makeText(this, "فایل ویدیو خالی است", Toast.LENGTH_LONG).show();
             Log.e(TAG, "No valid video file to move to gallery");
         }
         videoFile = null;
@@ -179,29 +203,24 @@ public class ScreenCaptureService extends Service {
 
             ContentResolver resolver = getContentResolver();
             Uri uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
-            if (uri == null) {
-                throw new IOException("MediaStore insert failed");
-            }
-
-            try (OutputStream out = resolver.openOutputStream(uri);
-                 FileInputStream in = new FileInputStream(sourceFile)) {
-                byte[] buffer = new byte[1024];
-                int len;
-                while ((len = in.read(buffer)) > 0) {
-                    out.write(buffer, 0, len);
+            if (uri != null) {
+                try (OutputStream out = resolver.openOutputStream(uri);
+                     FileInputStream in = new FileInputStream(sourceFile)) {
+                    byte[] buffer = new byte[4096];
+                    int len;
+                    while ((len = in.read(buffer)) > 0) {
+                        out.write(buffer, 0, len);
+                    }
                 }
+
+                values.clear();
+                values.put(MediaStore.Video.Media.IS_PENDING, 0);
+                resolver.update(uri, values, null, null);
+
+                sourceFile.delete();
+                Log.d(TAG, "Video moved to gallery: " + uri);
             }
-
-            values.clear();
-            values.put(MediaStore.Video.Media.IS_PENDING, 0);
-            resolver.update(uri, values, null, null);
-
-            sourceFile.delete();
-
-            Toast.makeText(this, "ویدیو در گالری ذخیره شد", Toast.LENGTH_LONG).show();
-            Log.d(TAG, "Video moved to gallery: " + uri);
         } catch (Exception e) {
-            Toast.makeText(this, "خطا در انتقال به گالری", Toast.LENGTH_LONG).show();
             Log.e(TAG, "moveToGallery failed", e);
         }
     }
