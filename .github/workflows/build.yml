@@ -94,7 +94,7 @@ jobs:
       run: |
         export PATH="/opt/hostedtoolcache/Python/3.10.12/x64/bin:$PATH"
         buildozer -v android debug
-
+        export P4A_NDK_API=26
     - name: Prepare APK
       run: |
         mkdir -p bin
