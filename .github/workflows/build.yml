@@ -104,7 +104,7 @@ jobs:
           --permission READ_MEDIA_IMAGES \
           --permission READ_MEDIA_VIDEO \
           --permission POST_NOTIFICATIONS \
-          --add-source=src \
+          --add-source=src 
 
     - name: Prepare APK
       run: |
