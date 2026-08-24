@@ -17,7 +17,7 @@ if platform == "android":
     PythonActivity = autoclass("org.kivy.android.PythonActivity")
     Intent = autoclass("android.content.Intent")
     Context = autoclass("android.content.Context")
-    BuildVersion = autoclass('android.os.Build$VERSION')   # ✅ اصلاح شد
+    BuildVersion = autoclass('android.os.Build$VERSION')
 
 
 def ftext(text):
@@ -107,15 +107,11 @@ class ScreenRecorderApp(App):
     def start_service_with_permission(self, data):
         try:
             activity = PythonActivity.mActivity
+            # 🟢 نام پکیج باید دقیقاً مطابق ساختار پروژه‌تان باشد
             service_intent = Intent(activity, autoclass("org.example.screenrecorder.ScreenCaptureService"))
             service_intent.putExtra("resultCode", -1)
-            # ✅ اصلاح: cast به Parcelable
             service_intent.putExtra("data", cast('android.os.Parcelable', data))
-            service_intent.putExtra("width", 720)
-            service_intent.putExtra("height", 1280)
-            service_intent.putExtra("density", 320)
 
-            # ✅ اصلاح: استفاده از BuildVersion.SDK_INT
             if BuildVersion.SDK_INT >= 26:
                 activity.startForegroundService(service_intent)
             else:
@@ -146,9 +142,16 @@ class ScreenRecorderApp(App):
         try:
             activity = PythonActivity.mActivity
             service_intent = Intent(activity, autoclass("org.example.screenrecorder.ScreenCaptureService"))
+            
+            # 🟢 ارسال اکشن توقف به سرویس جاوا (بر اساس کدی که در جاوا نوشتیم)
             service_intent.setAction("org.example.screenrecorder.STOP")
-            activity.startService(service_intent)   # ارسال اکشن STOP به سرویس
-            self.status_label.text = ftext("سرویس متوقف شد")
+            
+            if BuildVersion.SDK_INT >= 26:
+                activity.startForegroundService(service_intent)
+            else:
+                activity.startService(service_intent)
+
+            self.status_label.text = ftext("دستور توقف صادر شد")
         except Exception as e:
             self.status_label.text = ftext(f"خطا در توقف سرویس: {e}")
 
