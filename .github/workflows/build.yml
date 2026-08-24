@@ -105,7 +105,6 @@ jobs:
           --permission READ_MEDIA_VIDEO \
           --permission POST_NOTIFICATIONS \
           --add-source=src \
-          --manifest=src/AndroidManifest.xml
 
     - name: Prepare APK
       run: |
