@@ -79,6 +79,12 @@ jobs:
         mkdir -p $HOME/.buildozer/android/platform
         ln -sfn /home/runner/android-sdk $HOME/.buildozer/android/platform/android-sdk
 
+    - name: Show buildozer.spec
+      run: |
+        cat buildozer.spec
+        echo "-----------------------------"
+        grep -E "ndk|ndk_api|p4a.ndk_api|build_tools|android.ndk" buildozer.spec
+
     - name: Build with Buildozer
       env:
         ANDROID_HOME: /home/runner/android-sdk
