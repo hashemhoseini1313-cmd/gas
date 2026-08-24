@@ -107,7 +107,6 @@ class ScreenRecorderApp(App):
     def start_service_with_permission(self, data):
         try:
             activity = PythonActivity.mActivity
-            # 🟢 نام پکیج باید دقیقاً مطابق ساختار پروژه‌تان باشد
             service_intent = Intent(activity, autoclass("org.example.screenrecorder.ScreenCaptureService"))
             service_intent.putExtra("resultCode", -1)
             service_intent.putExtra("data", cast('android.os.Parcelable', data))
@@ -142,15 +141,9 @@ class ScreenRecorderApp(App):
         try:
             activity = PythonActivity.mActivity
             service_intent = Intent(activity, autoclass("org.example.screenrecorder.ScreenCaptureService"))
-            
-            # 🟢 ارسال اکشن توقف به سرویس جاوا (بر اساس کدی که در جاوا نوشتیم)
             service_intent.setAction("org.example.screenrecorder.STOP")
-            
-            if BuildVersion.SDK_INT >= 26:
-                activity.startForegroundService(service_intent)
-            else:
-                activity.startService(service_intent)
-
+            # اصلاح: برای ارسال فرمان توقف، startService کافی است
+            activity.startService(service_intent)
             self.status_label.text = ftext("دستور توقف صادر شد")
         except Exception as e:
             self.status_label.text = ftext(f"خطا در توقف سرویس: {e}")
