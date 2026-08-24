@@ -73,6 +73,12 @@ jobs:
         mkdir -p $HOME/.buildozer/android/platform
         mv android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r25b
 
+    # ✅ مرحله جدید: لینک SDK به مسیر پیش‌فرض Buildozer
+    - name: Create SDK symlink for Buildozer
+      run: |
+        mkdir -p $HOME/.buildozer/android/platform
+        ln -sfn /home/runner/android-sdk $HOME/.buildozer/android/platform/android-sdk
+
     - name: Build with Buildozer
       env:
         ANDROID_HOME: /home/runner/android-sdk
