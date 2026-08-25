@@ -117,20 +117,8 @@ class ScreenRecorderApp(App):
                 activity.startService(service_intent)
 
             self.status_label.text = ftext("سرویس شروع شد")
-
-            # ✅ نمایش Toast برای تأیید شروع سرویس از پایتون
-            Toast = autoclass('android.widget.Toast')
-            Toast.makeText(activity, "Python started service", Toast.LENGTH_LONG).show()
-
         except Exception as e:
             self.status_label.text = ftext(f"خطا در شروع سرویس: {e}")
-
-            # ✅ نمایش Toast خطا
-            try:
-                Toast = autoclass('android.widget.Toast')
-                Toast.makeText(activity, f"Error: {e}", Toast.LENGTH_LONG).show()
-            except:
-                pass
 
     def start_recording(self, instance):
         if platform != "android":
