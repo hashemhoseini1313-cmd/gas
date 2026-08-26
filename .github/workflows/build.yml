@@ -98,14 +98,8 @@ jobs:
           --ndk-dir=/home/runner/.buildozer/android/platform/android-ndk-r23b \
           --dist-name=screenrecorder \
           --permission INTERNET \
-          --permission FOREGROUND_SERVICE \
-          --permission FOREGROUND_SERVICE_MEDIA_PROJECTION \
-          --permission RECORD_AUDIO \
-          --permission WRITE_EXTERNAL_STORAGE \
-          --permission READ_EXTERNAL_STORAGE \
           --permission READ_MEDIA_IMAGES \
           --permission READ_MEDIA_VIDEO \
-          --permission POST_NOTIFICATIONS \
           --add-source=src \
           --hook=p4a_hooks.py
 
