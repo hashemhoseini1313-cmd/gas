@@ -123,7 +123,7 @@ class ScreenRecorderApp(App):
     def _request_runtime_permissions(self):
         try:
             from android.permissions import request_permissions, Permission
-            perms = [Permission.FOREGROUND_SERVICE]
+            perms = [Permission.FOREGROUND_SERVICE, Permission.RECORD_AUDIO]
             if BuildVersion.SDK_INT >= 33:
                 perms.append(Permission.POST_NOTIFICATIONS)
             request_permissions(perms)
