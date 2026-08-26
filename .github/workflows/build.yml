@@ -65,20 +65,22 @@ jobs:
       run: |
         rm -rf .buildozer ~/.buildozer ~/.cache/p4a ~/.local/share/python-for-android
 
-    - name: Download and install NDK r25b
+    # نکته: قبلاً NDK 25b با libffi ناسازگار تشخیص داده شده بود و
+    # تصمیم گرفته شد به 23b برگردیم. اگه این نسخه هم مشکل داد، لاگ کامل رو بفرست.
+    - name: Download and install NDK r23b
       run: |
-        wget -q https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
-        unzip -q android-ndk-r25b-linux.zip
-        rm android-ndk-r25b-linux.zip
+        wget -q https://dl.google.com/android/repository/android-ndk-r23b-linux.zip
+        unzip -q android-ndk-r23b-linux.zip
+        rm android-ndk-r23b-linux.zip
         mkdir -p $HOME/.buildozer/android/platform
-        mv android-ndk-r25b $HOME/.buildozer/android/platform/android-ndk-r25b
+        mv android-ndk-r23b $HOME/.buildozer/android/platform/android-ndk-r23b
 
-    - name: Build with p4a (NDK 25b, API 26)
+    - name: Build with p4a (NDK 23b, API 26)
       env:
         ANDROID_HOME: /home/runner/android-sdk
         ANDROID_SDK_ROOT: /home/runner/android-sdk
-        ANDROID_NDK_HOME: /home/runner/.buildozer/android/platform/android-ndk-r25b
-        ANDROID_NDK_ROOT: /home/runner/.buildozer/android/platform/android-ndk-r25b
+        ANDROID_NDK_HOME: /home/runner/.buildozer/android/platform/android-ndk-r23b
+        ANDROID_NDK_ROOT: /home/runner/.buildozer/android/platform/android-ndk-r23b
       run: |
         export PATH="/opt/hostedtoolcache/Python/3.10.12/x64/bin:$PATH"
         export P4A_NDK_API=26
@@ -88,12 +90,12 @@ jobs:
           --name "Screen Recorder" \
           --version 1.0 \
           --bootstrap=sdl2 \
-          --requirements=python3==3.10.12,hostpython3==3.10.12,kivy==2.1.0,arabic_reshaper,python-bidi,pyjnius \
+          --requirements=python3==3.10.12,hostpython3==3.10.12,kivy==2.1.0,arabic_reshaper,python-bidi,pyjnius,android \
           --arch=arm64-v8a \
           --android-api=35 \
           --ndk-api=26 \
           --sdk-dir=/home/runner/android-sdk \
-          --ndk-dir=/home/runner/.buildozer/android/platform/android-ndk-r25b \
+          --ndk-dir=/home/runner/.buildozer/android/platform/android-ndk-r23b \
           --dist-name=screenrecorder \
           --permission INTERNET \
           --permission FOREGROUND_SERVICE \
@@ -104,7 +106,8 @@ jobs:
           --permission READ_MEDIA_IMAGES \
           --permission READ_MEDIA_VIDEO \
           --permission POST_NOTIFICATIONS \
-          --add-source=src 
+          --add-source=src \
+          --hook=p4a_hooks.py
 
     - name: Prepare APK
       run: |
