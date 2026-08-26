@@ -4,262 +4,275 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
-import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ServiceInfo;
+import android.graphics.Bitmap;
+import android.graphics.PixelFormat;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
+import android.media.Image;
+import android.media.ImageReader;
 import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.OutputStream;
-import java.io.IOException;
+import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 public class ScreenCaptureService extends Service {
+
     private static final String TAG = "ScreenCaptureService";
-    private static final String CHANNEL_ID = "ScreenCaptureServiceChannel";
-    private static final int NOTIFICATION_ID = 1001;
+    private static final String CHANNEL_ID = "screen_capture_channel";
+    private static final int NOTIFICATION_ID = 1;
+
+    public static final String ACTION_START = "org.example.screenrecorder.START";
+    public static final String ACTION_SCREENSHOT = "org.example.screenrecorder.SCREENSHOT";
     public static final String ACTION_STOP = "org.example.screenrecorder.STOP";
 
+    private MediaProjectionManager projectionManager;
     private MediaProjection mediaProjection;
+
+    private VirtualDisplay recordingDisplay;
     private MediaRecorder mediaRecorder;
-    private VirtualDisplay virtualDisplay;
-    private File videoFile;
-    private MediaProjection.Callback projectionCallback;
+
+    private VirtualDisplay screenshotDisplay;
+    private ImageReader imageReader;
+
+    private HandlerThread workerThread;
+    private Handler workerHandler;
+
+    private int screenWidth, screenHeight, screenDensity;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        projectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
         createNotificationChannel();
+
+        workerThread = new HandlerThread("ScreenCaptureWorker");
+        workerThread.start();
+        workerHandler = new Handler(workerThread.getLooper());
+
+        DisplayMetrics metrics = new DisplayMetrics();
+        WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+        wm.getDefaultDisplay().getRealMetrics(metrics);
+        screenWidth = metrics.widthPixels;
+        screenHeight = metrics.heightPixels;
+        screenDensity = metrics.densityDpi;
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Toast.makeText(this, "onStartCommand called", Toast.LENGTH_SHORT).show();
-
-        if (intent != null) {
-            String action = intent.getAction();
-            if (ACTION_STOP.equals(action)) {
-                Toast.makeText(this, "Action STOP received", Toast.LENGTH_SHORT).show();
-                stopRecording();
-                stopForeground(true);
-                stopSelf();
-                return START_NOT_STICKY;
-            }
-
-            int resultCode = intent.getIntExtra("resultCode", -1);
-            Intent data = intent.getParcelableExtra("data");
-            Toast.makeText(this, "resultCode=" + resultCode + " data=" + (data != null), Toast.LENGTH_LONG).show();
-
-            // ۱. ناتیفیکیشن پیش‌زمینه
-            Notification notification;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                notification = new Notification.Builder(this, CHANNEL_ID)
-                        .setContentTitle("ضبط صفحه نمایش")
-                        .setContentText("در حال ضبط ویدیو...")
-                        .setSmallIcon(android.R.drawable.ic_menu_camera)
-                        .setPriority(Notification.PRIORITY_LOW)
-                        .build();
-            } else {
-                notification = new Notification.Builder(this)
-                        .setContentTitle("ضبط صفحه نمایش")
-                        .setContentText("در حال ضبط ویدیو...")
-                        .setSmallIcon(android.R.drawable.ic_menu_camera)
-                        .setPriority(Notification.PRIORITY_LOW)
-                        .build();
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
-            } else {
-                startForeground(NOTIFICATION_ID, notification);
-            }
-
-            // ۲. محاسبه دقیق ابعاد و زوج‌سازی رزولوشن
-            DisplayMetrics metrics = new DisplayMetrics();
-            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
-            if (wm != null) {
-                wm.getDefaultDisplay().getRealMetrics(metrics);
-            }
-            int width = metrics.widthPixels;
-            int height = metrics.heightPixels;
-            int density = metrics.densityDpi;
-
-            // ⚠️ حتماً ابعاد باید عدد زوج باشند تا MediaEncoder کرش نکند
-            if (width % 2 != 0) width -= 1;
-            if (height % 2 != 0) height -= 1;
-
-            MediaProjectionManager projectionManager = (MediaProjectionManager) getSystemService(Context.MEDIA_PROJECTION_SERVICE);
-            if (projectionManager != null && data != null) {
-                mediaProjection = projectionManager.getMediaProjection(resultCode, data);
-                Toast.makeText(this, "MediaProjection created", Toast.LENGTH_SHORT).show();
-
-                // ⚠️ شرط اجباری برای اندروید ۱۴ و ۱۵: ثبت Callback
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    projectionCallback = new MediaProjection.Callback() {
-                        @Override
-                        public void onStop() {
-                            super.onStop();
-                            stopRecording();
-                        }
-                    };
-                    mediaProjection.registerCallback(projectionCallback, null);
-                }
-
-                startRecording(width, height, density);
-            } else {
-                Toast.makeText(this, "projectionManager or data is null", Toast.LENGTH_LONG).show();
-                Log.e(TAG, "projectionManager or data is null");
-                stopSelf();
-            }
+        if (intent == null || intent.getAction() == null) {
+            return START_NOT_STICKY;
         }
+
+        String action = intent.getAction();
+
+        if (ACTION_STOP.equals(action)) {
+            stopRecording();
+            stopForeground(true);
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
+        // باید قبل از هر کار دیگه‌ای فورگراند بشه، وگرنه روی اندروید 8+ کرش می‌کنه
+        startForeground(NOTIFICATION_ID, buildNotification());
+
+        int resultCode = intent.getIntExtra("resultCode", 0);
+        Intent data = intent.getParcelableExtra("data");
+
+        if (resultCode == 0 || data == null) {
+            Log.e(TAG, "داده مجوز MediaProjection نامعتبر است");
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
+        mediaProjection = projectionManager.getMediaProjection(resultCode, data);
+        if (mediaProjection == null) {
+            Log.e(TAG, "دریافت MediaProjection ناموفق بود");
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
+        // از اندروید 14 به بعد بدون این کالبک ممکنه سرویس کرش کنه
+        mediaProjection.registerCallback(new MediaProjection.Callback() {
+            @Override
+            public void onStop() {
+                stopRecording();
+            }
+        }, workerHandler);
+
+        if (ACTION_START.equals(action)) {
+            startRecording();
+        } else if (ACTION_SCREENSHOT.equals(action)) {
+            takeScreenshot();
+        }
+
         return START_NOT_STICKY;
     }
 
-    private void startRecording(int width, int height, int density) {
+    private void startRecording() {
         try {
-            File storageDir = new File(getExternalFilesDir(Environment.DIRECTORY_MOVIES), "ScreenRecordings");
-            if (!storageDir.exists()) {
-                storageDir.mkdirs();
-            }
-            String fileName = "REC_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date()) + ".mp4";
-            videoFile = new File(storageDir, fileName);
+            File outDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+            if (outDir != null && !outDir.exists()) outDir.mkdirs();
+            String fileName = "record_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".mp4";
+            File outFile = new File(outDir, fileName);
 
             mediaRecorder = new MediaRecorder();
             mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
             mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            mediaRecorder.setOutputFile(videoFile.getAbsolutePath());
-            mediaRecorder.setVideoSize(width, height);
+            mediaRecorder.setOutputFile(outFile.getAbsolutePath());
+            mediaRecorder.setVideoSize(screenWidth, screenHeight);
             mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-            mediaRecorder.setVideoEncodingBitRate(6000000);
             mediaRecorder.setVideoFrameRate(30);
+            mediaRecorder.setVideoEncodingBitRate(8_000_000);
             mediaRecorder.prepare();
 
-            virtualDisplay = mediaProjection.createVirtualDisplay(
-                    "ScreenCapture",
-                    width, height, density,
+            recordingDisplay = mediaProjection.createVirtualDisplay(
+                    "ScreenRecording",
+                    screenWidth, screenHeight, screenDensity,
                     DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                    mediaRecorder.getSurface(), null, null
+                    mediaRecorder.getSurface(), null, workerHandler
             );
 
             mediaRecorder.start();
-            Toast.makeText(this, "ضبط شروع شد", Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "Recording started to: " + videoFile.getAbsolutePath());
+            Log.i(TAG, "ضبط شروع شد: " + outFile.getAbsolutePath());
         } catch (Exception e) {
-            Toast.makeText(this, "خطا در شروع ضبط", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "startRecording failed", e);
-            stopRecording();
+            Log.e(TAG, "خطا در شروع ضبط", e);
             stopSelf();
         }
     }
 
-    private void stopRecording() {
-        if (mediaRecorder != null) {
+    private void takeScreenshot() {
+        imageReader = ImageReader.newInstance(screenWidth, screenHeight, PixelFormat.RGBA_8888, 2);
+
+        screenshotDisplay = mediaProjection.createVirtualDisplay(
+                "ScreenShot",
+                screenWidth, screenHeight, screenDensity,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                imageReader.getSurface(), null, workerHandler
+        );
+
+        imageReader.setOnImageAvailableListener(reader -> {
+            Image image = null;
             try {
+                image = reader.acquireLatestImage();
+                if (image != null) {
+                    saveImage(image);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "خطا در گرفتن عکس", e);
+            } finally {
+                if (image != null) image.close();
+                cleanupScreenshot();
+                stopSelf();
+            }
+        }, workerHandler);
+    }
+
+    private void saveImage(Image image) throws Exception {
+        Image.Plane plane = image.getPlanes()[0];
+        ByteBuffer buffer = plane.getBuffer();
+        int pixelStride = plane.getPixelStride();
+        int rowStride = plane.getRowStride();
+        int rowPadding = rowStride - pixelStride * screenWidth;
+
+        Bitmap bitmap = Bitmap.createBitmap(
+                screenWidth + rowPadding / pixelStride, screenHeight, Bitmap.Config.ARGB_8888);
+        bitmap.copyPixelsFromBuffer(buffer);
+        bitmap = Bitmap.createBitmap(bitmap, 0, 0, screenWidth, screenHeight);
+
+        File outDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (outDir != null && !outDir.exists()) outDir.mkdirs();
+        String fileName = "screenshot_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".png";
+        File outFile = new File(outDir, fileName);
+
+        try (FileOutputStream fos = new FileOutputStream(outFile)) {
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+        }
+        Log.i(TAG, "عکس ذخیره شد: " + outFile.getAbsolutePath());
+    }
+
+    private void cleanupScreenshot() {
+        if (screenshotDisplay != null) {
+            screenshotDisplay.release();
+            screenshotDisplay = null;
+        }
+        if (imageReader != null) {
+            imageReader.close();
+            imageReader = null;
+        }
+    }
+
+    private void stopRecording() {
+        try {
+            if (mediaRecorder != null) {
                 mediaRecorder.stop();
                 mediaRecorder.reset();
                 mediaRecorder.release();
-            } catch (Exception e) {
-                Log.e(TAG, "stopRecording error", e);
+                mediaRecorder = null;
             }
-            mediaRecorder = null;
+        } catch (Exception e) {
+            Log.e(TAG, "خطا در توقف ضبط", e);
         }
-        if (virtualDisplay != null) {
-            virtualDisplay.release();
-            virtualDisplay = null;
+        if (recordingDisplay != null) {
+            recordingDisplay.release();
+            recordingDisplay = null;
         }
         if (mediaProjection != null) {
-            if (projectionCallback != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                mediaProjection.unregisterCallback(projectionCallback);
-            }
             mediaProjection.stop();
             mediaProjection = null;
         }
-
-        if (videoFile != null && videoFile.exists() && videoFile.length() > 0) {
-            moveToGallery(videoFile);
-        } else {
-            Toast.makeText(this, "فایل ویدیو خالی است", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "No valid video file to move to gallery");
-        }
-        videoFile = null;
     }
 
-    private void moveToGallery(File sourceFile) {
-        try {
-            ContentValues values = new ContentValues();
-            values.put(MediaStore.Video.Media.DISPLAY_NAME, sourceFile.getName());
-            values.put(MediaStore.Video.Media.MIME_TYPE, "video/mp4");
-            values.put(MediaStore.Video.Media.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/ScreenRecordings");
-            values.put(MediaStore.Video.Media.IS_PENDING, 1);
-
-            ContentResolver resolver = getContentResolver();
-            Uri uri = resolver.insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
-            if (uri != null) {
-                try (OutputStream out = resolver.openOutputStream(uri);
-                     FileInputStream in = new FileInputStream(sourceFile)) {
-                    byte[] buffer = new byte[4096];
-                    int len;
-                    while ((len = in.read(buffer)) > 0) {
-                        out.write(buffer, 0, len);
-                    }
-                }
-
-                values.clear();
-                values.put(MediaStore.Video.Media.IS_PENDING, 0);
-                resolver.update(uri, values, null, null);
-
-                sourceFile.delete();
-                Toast.makeText(this, "ویدیو در گالری ذخیره شد", Toast.LENGTH_LONG).show();
-                Log.d(TAG, "Video moved to gallery: " + uri);
-            } else {
-                Toast.makeText(this, "MediaStore insert failed", Toast.LENGTH_LONG).show();
-            }
-        } catch (Exception e) {
-            Toast.makeText(this, "خطا در انتقال به گالری", Toast.LENGTH_LONG).show();
-            Log.e(TAG, "moveToGallery failed", e);
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID, "Screen Capture", NotificationManager.IMPORTANCE_LOW);
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            nm.createNotificationChannel(channel);
         }
+    }
+
+    private Notification buildNotification() {
+        Notification.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder = new Notification.Builder(this, CHANNEL_ID);
+        } else {
+            builder = new Notification.Builder(this);
+        }
+        return builder
+                .setContentTitle("ضبط صفحه")
+                .setContentText("در حال اجرا...")
+                .setSmallIcon(android.R.drawable.ic_menu_camera)
+                .build();
     }
 
     @Override
     public void onDestroy() {
-        stopRecording();
         super.onDestroy();
+        stopRecording();
+        cleanupScreenshot();
+        if (workerThread != null) {
+            workerThread.quitSafely();
+        }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
-
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel serviceChannel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Screen Capture Service Channel",
-                    NotificationManager.IMPORTANCE_LOW
-            );
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) {
-                manager.createNotificationChannel(serviceChannel);
-            }
-        }
     }
 }
