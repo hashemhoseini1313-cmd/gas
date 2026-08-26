@@ -125,18 +125,39 @@ public class ScreenCaptureService extends Service {
     }
 
     private void startRecording() {
-        try {
-            File outDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
-            if (outDir != null && !outDir.exists()) outDir.mkdirs();
-            String fileName = "record_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".mp4";
-            File outFile = new File(outDir, fileName);
+        File outDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES);
+        if (outDir != null && !outDir.exists()) outDir.mkdirs();
+        String fileName = "record_" + new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date()) + ".mp4";
+        File outFile = new File(outDir, fileName);
 
+        // اول با صدای میکروفون امتحان می‌کنیم؛ اگه مجوز RECORD_AUDIO رد شده باشه
+        // یا میکروفون در دسترس نباشه، بدون کرش کردن سرویس، بدون صدا ادامه می‌دیم
+        if (!tryStartRecorder(outFile, true)) {
+            Log.w(TAG, "ضبط با صدا ناموفق بود، تلاش بدون صدا...");
+            if (!tryStartRecorder(outFile, false)) {
+                Log.e(TAG, "ضبط حتی بدون صدا هم شکست خورد");
+                stopSelf();
+            }
+        }
+    }
+
+    private boolean tryStartRecorder(File outFile, boolean withAudio) {
+        try {
             mediaRecorder = new MediaRecorder();
+            // ترتیب مهمه: منابع باید قبل از setOutputFormat تنظیم بشن
             mediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
+            if (withAudio) {
+                mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            }
             mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
             mediaRecorder.setOutputFile(outFile.getAbsolutePath());
             mediaRecorder.setVideoSize(screenWidth, screenHeight);
             mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+            if (withAudio) {
+                mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+                mediaRecorder.setAudioEncodingBitRate(128_000);
+                mediaRecorder.setAudioSamplingRate(44100);
+            }
             mediaRecorder.setVideoFrameRate(30);
             mediaRecorder.setVideoEncodingBitRate(8_000_000);
             mediaRecorder.prepare();
@@ -149,10 +170,19 @@ public class ScreenCaptureService extends Service {
             );
 
             mediaRecorder.start();
-            Log.i(TAG, "ضبط شروع شد: " + outFile.getAbsolutePath());
+            Log.i(TAG, "ضبط شروع شد (صدا: " + withAudio + "): " + outFile.getAbsolutePath());
+            return true;
         } catch (Exception e) {
-            Log.e(TAG, "خطا در شروع ضبط", e);
-            stopSelf();
+            Log.e(TAG, "خطا در شروع ضبط (صدا: " + withAudio + ")", e);
+            if (mediaRecorder != null) {
+                try {
+                    mediaRecorder.reset();
+                    mediaRecorder.release();
+                } catch (Exception ignored) {
+                }
+                mediaRecorder = null;
+            }
+            return false;
         }
     }
 
